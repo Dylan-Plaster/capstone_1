@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    {{data['tracks']['items'][0]['name']}} {{data['tracks']['items'][0]['uri']}}
+
+    <iframe
+      src="https://open.spotify.com/embed/track/{{id}}"
+      width="300"
+      height="380"
+      frameborder="0"
+      allowtransparency="true"
+      allow="encrypted-media"
+    ></iframe>
+    <!-- <div>https://open.spotify.com/embed/track/{{id}}</div> -->
+  </body>
+</html>
