@@ -2,20 +2,20 @@
 
 ####My idea is an app that will work with both the Reddit and Spotify APIs to make discovering new music and adding it to your Spotify playlists easier.   
 
-The website will get posts from the r/ListenToThis subreddit, which is a sub dedicated to posting lesser-known or overlooked artists. This makes it an ideal music subreddit to choose, as users are less likely to have already heard songs posted here. These posts will be displayed on the website, where users can sort them in the same ways they do on reddit (i.e. sort by new/hot/top of the week/etc), and listen to the songs through their spotify account or youtube. After listening to each song, users will rate the song out of 5 stars, and have options to add the song to a custom Spotify playlist created by the app, and to save the song in the user's profile. Once the user has added several songs to the custom playlist, the app will make recommendations of new music to listen to, weighted based on the user's rating of each song. The benefit of this app is that it provides a centralized place to discover new songs, get recommendations, and create spotify playlists. 
+The website will get posts from the r/ListenToThis subreddit, which is a sub dedicated to posting lesser-known or overlooked artists. This makes it an ideal music subreddit to choose, as users are less likely to have already heard songs posted here. These posts will be displayed on the website, where users can sort them in the same ways they do on reddit (i.e. sort by new/hot/top of the week/etc), and listen to the songs through youtube inline. After listening to each song, users will rate the song out of 5 stars, and have an option to add the song to a playlist on the website. Users can log in with their spotify account and copy this playlist onto thier spotify. Once the user has added several songs to the playlist, the app will make recommendations of new music to listen to, weighted based on the user's rating of each song. The benefit of this app is that it provides a centralized place to discover new songs, get recommendations, and create spotify playlists. 
 
 
 
 ####1. What goal will your website be designed to achieve?
 
 
-+ The website will be designed to help users find new music they like and would otherwise have not discovered. 
++ The website will be designed to help users find new music they like and would otherwise have not discovered.  
 
 ####2. What kind of users will visit your site? In other words, what is the demographic of your users?
 
-+ The target user is someone who loves music, but finds they often get stuck listening to the same bands and songs they already know. They know they want to branch out and listen to new music but find it hard to discover new artists. The rating system on the website should make the recommendations more accurate 
++ The target user is someone who loves music, but finds they often get stuck listening to the same bands and songs they already know. They know they want to branch out and listen to new music but find it hard to discover new artists. Someone who likes to scroll through the r/ListenToThis subreddit but wants to be able to more easily save songs from there straight into a playlist. 
 
-####3.What data do you plan on using? You may have not picked your actual API yet, which is fine, just outline what kind of data you would like it to contain.
+####3. What data do you plan on using? You may have not picked your actual API yet, which is fine, just outline what kind of data you would like it to contain.
 
 + The data for this app will come from both the reddit and the spotify APIs. The reddit api will provide posts, which have the song name and artist name in a specified format. The spotify api will provide lots of information about each individual song as well as providing information about the user's playlists. When creating a list of recommendations for the user, the spotify api will provide song data like genre, danceability, liveness, acousticness, and other stats which can be used to help tailor the recommendations made to the user
 
@@ -27,7 +27,7 @@ The website will get posts from the r/ListenToThis subreddit, which is a sub ded
 
 ####b. What kinds of issues might you run into with your API?
 
-+ It may be difficult to take the song title and artist and reliably convert it to a spotify track id, which can then be used to get info about each track. I need to do more research into this part.
++ It may be difficult to take the song title and artist and reliably convert it to a spotify track id, which can then be used to get info about each track. I may have to have the user search through results manually if the song cannot be found.
 
 
 ####c. Is there any sensitive information you need to secure?
@@ -40,10 +40,11 @@ The website will get posts from the r/ListenToThis subreddit, which is a sub ded
 + Functionalities include: 
 	+ ability to listen to the song on the webpage without opening a new tab or window
 	+  ability to sort the posts by reddit's sorting methods e.g: hot, new, top of the week/month, etc
-	+   ability to save a song/post to a different tab or section of the website for later listening
+	+   ability to save a song/post to a playlist
 	+    ability to rate songs after listening to tune recommendations
-	+     ability to click a button on a post to add it to a custom spotify playlist
+	+     ability to turn playlists into spotify playlists
 	+      ability to recommend new songs to the user based on their custom playlist and the song ratings they give. 
+	+      ability to create a pdf/image of a playlist and post it to instagram
 
 
 ####e. What will the user flow look like?

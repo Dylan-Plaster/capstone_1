@@ -31,8 +31,3 @@ def refreshToken(time):
 
 def getAccessToken():
     return TOKEN_DATA
-
-
-
-print('**************************************************************************')
-print(getAccessToken())
