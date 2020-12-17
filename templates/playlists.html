@@ -1,0 +1,21 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-9 d-flex justify-content-between">
+      <a
+        href="/playlists/new"
+        class="btn btn-success btn-lg rounded-pill pill-btn"
+        >Create New Playlist</a
+      >
+      <a
+        href="/users/{{user.id}}/playlists"
+        class="btn btn-danger btn-lg rounded-pill pill-btn"
+        >My playlists</a
+      >
+      <a href="/playlists" class="btn btn-info btn-lg rounded-pill pill-btn"
+        >All Playlists</a
+      >
+    </div>
+  </div>
+</div>
+{% endblock %}

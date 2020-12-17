@@ -1,0 +1,12 @@
+{% for submission in posts %}
+<div class="card my-1">
+  <div class="card-body">
+    <p>{{submission.title}}</p>
+    <iframe
+      src="http://www.youtube.com/embed/{{submission.video_id}}"
+      frameborder="0"
+      allowfullscreen
+    ></iframe>
+  </div>
+</div>
+{% endfor %}

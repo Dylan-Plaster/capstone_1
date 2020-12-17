@@ -1,0 +1,34 @@
+.hero-image {
+  background-image: url("https://images.unsplash.com/photo-1533135065252-2a65bf387032?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=2389&q=80"); /* The image used */
+  background-color: #cccccc; /* Used if the image is unavailable */
+  height: 320px; /* You must set a specified height */
+  background-position: 50% 22%; /* Center the image */
+  background-repeat: no-repeat; /* Do not repeat the image */
+  background-size: cover; /* Resize the background image to cover the entire container */
+  margin-bottom: 10px;
+  position: relative;
+}
+
+.hero-text {
+  text-align: center;
+  position: absolute;
+  color: white;
+  position: absolute;
+  top: 75%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+body {
+  background-color: rgb(220, 220, 220);
+}
+
+#header_img {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.pill-btn {
+  width: 225px !important;
+}
