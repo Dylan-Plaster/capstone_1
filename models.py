@@ -65,13 +65,13 @@ class Playlist_Song(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     playlist_id = db.Column(db.Integer, db.ForeignKey('playlists.id', ondelete='cascade'))
-    song_id = db.Column(db.Integer, db.ForeignKey('songs.id', ondelete='cascade'))
+    song_id = db.Column(db.String, db.ForeignKey('songs.id', ondelete='cascade'))
 
 class Song(db.Model):
     """song"""
     __tablename__ = 'songs'
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.String, primary_key=True)
     title = db.Column(db.String, nullable=False)
     artist = db.Column(db.String, nullable=False)
     link = db.Column(db.String, nullable=False)

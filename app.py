@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 import requests
 import praw
 from urllib.parse import urlparse, parse_qs
+import re
 
 CURR_USER_KEY = 'curr_user'
 
@@ -77,6 +78,20 @@ def get_video_id(url):
     return None    
 
 
+def extract_title(title):
+    """Function to extract the title and artist of a post/song"""
+    # The post titles are all in the same format : ArtistName -- Songname [genre] (year)
+    # First, find the ArtistName by searching for a set of characters before '-'
+    artist = re.search('[^-]*', title).group()
+    # Strip the whitespace off 
+    stripped_artist = artist.strip()
+
+    # Now, find characters between '-' and '['
+    title = re.search('(?<=- )(.*)(?=\[)', title).group()
+    # Strip the whitespace
+    stripped_title = title.strip()
+    return (stripped_title, stripped_artist)
+
 
 
 @app.route('/')
@@ -90,19 +105,41 @@ def show_homepage():
     posts = reddit.subreddit('ListenToThis').hot(limit=20)
     
     # Here we want to exclude the posts stickied to the top of the sub by the moderators
+    # Also, we want to save the info and post id into the database for later viewing
     not_sticky = []
+    
+    # The following line makes sure we're not trying to add a duplicate of a song already in the DB
+    songs_in_db = [song.id for song in Song.query.all()]
+    # for post in posts:
+    #     if not post.stickied:
+    #         if post.id not in songs_in_db:
+    #             url = post.url
+    #             post.video_id = get_video_id(url)
+    #             not_sticky.append(post)
+    #             (title, artist) = extract_title(post.title)
+    #             song = Song(id=post.id, title=title, link=post.url, artist=artist)
+    #             db.session.add(song)
+    #             db.session.commit()
+
     for post in posts:
         if not post.stickied:
             url = post.url
             post.video_id = get_video_id(url)
             not_sticky.append(post)
     
+    for post in not_sticky:
+        if post.id not in songs_in_db:
+            (title, artist) = extract_title(post.title)
+            song = Song(id=post.id, title=title, artist=artist, link=post.video_id)
+            db.session.add(song)
+            db.session.commit()
+    
         
 
-    if g.user:
-        return render_template('home.html', user=g.user, posts=not_sticky)
-    else:
-        return render_template('home_anon.html', posts=not_sticky)
+    # if g.user:
+    return render_template('home.html', user=g.user, posts=not_sticky)
+    # else:
+    #     return render_template('home_anon.html', posts=not_sticky)
 
 
 @app.route('/login', methods=["GET", "POST"])
@@ -152,7 +189,7 @@ def signup():
                 return render_template('signup.html', form=form)
         
             do_login(user)
-
+            flash(f'Welcome, {user.username}')
             return redirect('/')
     
         else:
@@ -170,18 +207,14 @@ def logout():
         user = User.query.get(session[CURR_USER_KEY])
         do_logout(user)
         flash(f'{user.username} logged out', 'success')
-        return redirect('/login')
+        return redirect('/')
 
 
 @app.route('/playlists')
 def playlists():
-    """Show playlist listing. Allow user to view their playlists and others"""
-    if not g.user:
-        print('show anonymous page here')
-        raise
-    else:
-        playlists = Playlist.query.all()
-        return render_template('playlists.html', user=g.user, playlists=playlists)
+    """Show all playlists from all users"""
+    playlists = Playlist.query.all()
+    return render_template('playlists.html', user=g.user, playlists=playlists)
     
 @app.route('/playlists/new', methods=['GET', "POST"])
 def new_playlist():
@@ -193,10 +226,34 @@ def new_playlist():
         form = PlaylistForm()
 
         if form.validate_on_submit():
-            playlist = Playlist(name=form.name.data, description=form.description.data)
+            playlist = Playlist(name=form.name.data, description=form.description.data, user_id=g.user.id)
             db.session.add(playlist)
             db.session.commit()
             return redirect(f'/users/{g.user.id}/playlists')
         else:
             return render_template('new_playlist.html', user=g.user, form=form)
+
+@app.route('/users/<int:id>/playlists')
+def my_playlists(id):
+    """Find the user with the given id and show their playlists.
+     If that user is not found redirect to all playlists and flash error"""
+    
+    owner = User.query.get_or_404(id)
+
+    if not owner:
+        flash('Could not find that user', 'danger')
+        return redirect('/playlists')
+    else:
+        playlists = owner.playlists
+        return render_template('user_playlists.html', owner=owner, user=g.user, playlists=playlists)
+
+
+@app.route('/playlists/<int:id>')
+def view_playlist(id):
+    """View the songs on a playlist"""
+
+    playlist = Playlist.query.get_or_404(id)
+
+    return render_template('view_playlist.html', playlist=playlist, user=g.user)
+
     

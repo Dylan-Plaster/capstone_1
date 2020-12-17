@@ -1,26 +1,62 @@
 .hero-image {
   background-image: url("https://images.unsplash.com/photo-1533135065252-2a65bf387032?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=2389&q=80"); /* The image used */
   background-color: #cccccc; /* Used if the image is unavailable */
-  height: 320px; /* You must set a specified height */
-  background-position: 50% 22%; /* Center the image */
+  height: 18vw;
+  background-position: 50% 22%;
   background-repeat: no-repeat; /* Do not repeat the image */
-  background-size: cover; /* Resize the background image to cover the entire container */
+  background-size: 110% 320%;
   margin-bottom: 10px;
   position: relative;
+  overflow: hidden;
 }
 
 .hero-text {
   text-align: center;
   position: absolute;
   color: white;
-  position: absolute;
   top: 75%;
   left: 50%;
   transform: translate(-50%, -50%);
 }
 
+.hero-text h1 {
+  font-size: 3.2vw;
+}
+
+.hero-text h5 {
+  font-size: 1.7vw;
+}
+
+@media (max-width: 575px) {
+  .hero-text h1 {
+    font-size: 7vw;
+  }
+
+  .hero-text h5 {
+    font-size: 3vw;
+  }
+}
+
+@media (min-width: 575px) and (max-width: 800px) {
+  .hero-text h1 {
+    font-size: 6vw;
+  }
+
+  .hero-text h5 {
+    font-size: 2.4vw;
+  }
+}
+
 body {
   background-color: rgb(220, 220, 220);
+}
+
+.navbar-nav > li > .dropdown-menu {
+  background-color: rgb(220, 220, 220);
+}
+
+.navbar-nav > li > .dropdown-menu > .dropdown-item:hover {
+  background-color: #17a2b8 !important;
 }
 
 #header_img {
@@ -31,4 +67,25 @@ body {
 
 .pill-btn {
   width: 225px !important;
+}
+
+.video-wrapper {
+  float: none;
+  clear: both;
+  width: 100%;
+  position: relative;
+  padding-bottom: 56.25%;
+  padding-top: 25px;
+  height: 0;
+}
+.video-wrapper iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.video-container {
+  width: 45vw;
 }

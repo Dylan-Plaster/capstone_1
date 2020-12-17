@@ -34,8 +34,36 @@
               >Home <span class="sr-only">(current)</span></a
             >
           </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/playlists">Playlists</a>
+          <li class="nav-item dropdown">
+            <a
+              class="nav-link dropdown-toggle"
+              href="#"
+              id="navbarDropdown"
+              role="button"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false"
+            >
+              Playlists
+            </a>
+            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+              {% if user %}
+              <a class="dropdown-item" href="/users/{{user.id}}/playlists"
+                >My Playlists</a
+              >
+              {% endif %}
+              <a class="dropdown-item" href="/playlists">All Playlists</a>
+              <div class="dropdown-divider"></div>
+              {% if user != None %}
+              <a class="dropdown-item" href="/playlists/new"
+                >Create New Playlist</a
+              >
+              {% endif %} {% if user == None %}
+              <a href="/login" class="dropdown-item"
+                >Login to make a playlist</a
+              >
+              {% endif %}
+            </div>
           </li>
         </ul>
       </div>
@@ -59,7 +87,7 @@
     </nav>
     <div class="hero-image">
       <div class="hero-text">
-        <h1>Listen2ThisPlaylist!</h1>
+        <!-- <h1>Listen2ThisPlaylist!</h1> -->
         <h5>Playlists and recommendations from the r/ListenToThis subreddit</h5>
       </div>
     </div>

@@ -1,12 +1,41 @@
 {% for submission in posts %}
 <div class="card my-1">
   <div class="card-body">
-    <p>{{submission.title}}</p>
-    <iframe
-      src="http://www.youtube.com/embed/{{submission.video_id}}"
-      frameborder="0"
-      allowfullscreen
-    ></iframe>
+    <div class="row">
+      <div class="col-4 justify-content-end">
+        <h4 class="display-5">{{submission.title}}</h4>
+        {% if user != None %}
+        <div class="dropdown">
+          <button
+            class="btn btn-secondary dropdown-toggle"
+            type="button"
+            id="dropdownMenuButton"
+            data-toggle="dropdown"
+            aria-haspopup="true"
+            aria-expanded="false"
+          >
+            Add to playlist
+          </button>
+          <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+            {% for playlist in user.playlists%}
+            <form action="/playlists/{{playlist.id}}/add/{{submission.id}}" method="POST"><button class="dropdown-item" type="submit">{{playlist.name}}</a></form>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      <div class="col-8 justify-content-start d-flex">
+        <div class="video-container">
+          <div class="video-wrapper">
+            <iframe
+              src="http://www.youtube.com/embed/{{submission.video_id}}"
+              frameborder="0"
+              allowfullscreen
+            ></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 {% endfor %}
