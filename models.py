@@ -72,8 +72,9 @@ class Song(db.Model):
     __tablename__ = 'songs'
 
     id = db.Column(db.String, primary_key=True)
-    title = db.Column(db.String, nullable=False)
-    artist = db.Column(db.String, nullable=False)
+    title = db.Column(db.String)
+    artist = db.Column(db.String)
+    post_title = db.Column(db.String, nullable=False)
     link = db.Column(db.String, nullable=False)
     spotify_id = db.Column(db.String)
     rating = db.Column(db.String)

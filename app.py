@@ -67,7 +67,10 @@ def get_video_id(url):
     if query.hostname in ('www.youtube.com', 'youtube.com'):
         if query.path == '/watch':
             path = parse_qs(query.query)
-            return path['v'][0]
+            try:
+                return path['v'][0]
+            except KeyError:
+                return None
         if query.path[:7] == '/embed/':
             # check the first 7 characters after the hostname, if they have the /embed/ path:
             return query.path.split('/')[2]
@@ -80,17 +83,23 @@ def get_video_id(url):
 
 def extract_title(title):
     """Function to extract the title and artist of a post/song"""
-    # The post titles are all in the same format : ArtistName -- Songname [genre] (year)
-    # First, find the ArtistName by searching for a set of characters before '-'
-    artist = re.search('[^-]*', title).group()
-    # Strip the whitespace off 
-    stripped_artist = artist.strip()
 
-    # Now, find characters between '-' and '['
-    title = re.search('(?<=- )(.*)(?=\[)', title).group()
-    # Strip the whitespace
-    stripped_title = title.strip()
-    return (stripped_title, stripped_artist)
+    try:
+        # The post titles are all in the same format : ArtistName -- Songname [genre] (year)
+        # First, find the ArtistName by searching for a set of characters before '-'
+        artist = re.search('[^-]*', title).group()
+        # Strip the whitespace off 
+        stripped_artist = artist.strip()
+
+        # Now, find characters between '-' and '['
+        title = re.search('(?<=- )(.*)(?=\[)', title).group()
+        # Strip the whitespace
+        stripped_title = title.strip()
+        return (stripped_title, stripped_artist)
+
+        # If the song title or artist name has unexpected characters, return errors
+    except AttributeError:
+        return ('error','error')
 
 
 
@@ -107,39 +116,44 @@ def show_homepage():
     # Here we want to exclude the posts stickied to the top of the sub by the moderators
     # Also, we want to save the info and post id into the database for later viewing
     not_sticky = []
+    show_user = []
     
     # The following line makes sure we're not trying to add a duplicate of a song already in the DB
     songs_in_db = [song.id for song in Song.query.all()]
-    # for post in posts:
-    #     if not post.stickied:
-    #         if post.id not in songs_in_db:
-    #             url = post.url
-    #             post.video_id = get_video_id(url)
-    #             not_sticky.append(post)
-    #             (title, artist) = extract_title(post.title)
-    #             song = Song(id=post.id, title=title, link=post.url, artist=artist)
-    #             db.session.add(song)
-    #             db.session.commit()
-
+   
     for post in posts:
         if not post.stickied:
             url = post.url
             post.video_id = get_video_id(url)
-            not_sticky.append(post)
+            if post.video_id != None:
+                not_sticky.append(post)
     
     for post in not_sticky:
-        if post.id not in songs_in_db:
+        if post.id not in songs_in_db and post.video_id != None:
             (title, artist) = extract_title(post.title)
-            song = Song(id=post.id, title=title, artist=artist, link=post.video_id)
-            db.session.add(song)
-            db.session.commit()
-    
-        
+            if title == 'error' or artist == 'error':
+                song = Song(id=post.id, post_title=post.title, link=post.video_id)
+                db.session.add(song)
+                db.session.commit()
+                show_user.append(song)
+            else:
 
-    # if g.user:
-    return render_template('home.html', user=g.user, posts=not_sticky)
-    # else:
-    #     return render_template('home_anon.html', posts=not_sticky)
+                song = Song(id=post.id, title=title, artist=artist, post_title=post.title, link=post.video_id)
+                db.session.add(song)
+                db.session.commit()
+                show_user.append(song)
+        elif post.id in songs_in_db and post.video_id != None:
+            song = Song.query.get(post.id)
+            show_user.append(song)
+
+    
+    # import pdb
+    # pdb.set_trace()
+    if g.user:
+        return render_template('home.html', user=g.user, posts=show_user)
+    else:
+        flash('Log in to create playlists!', 'warning')
+        return render_template('home.html', user=g.user, posts=show_user)
 
 
 @app.route('/login', methods=["GET", "POST"])
@@ -233,6 +247,7 @@ def new_playlist():
         else:
             return render_template('new_playlist.html', user=g.user, form=form)
 
+
 @app.route('/users/<int:id>/playlists')
 def my_playlists(id):
     """Find the user with the given id and show their playlists.
@@ -255,5 +270,21 @@ def view_playlist(id):
     playlist = Playlist.query.get_or_404(id)
 
     return render_template('view_playlist.html', playlist=playlist, user=g.user)
+
+
+@app.route('/playlists/<int:p_id>/add/<string:s_id>', methods=["POST"])
+def add_song(p_id, s_id):
+    """Add song with given ID to playlist with given ID"""
+
+    previous_url = request.referrer
+
+    playlist = Playlist.query.get_or_404(p_id)
+    song = Song.query.get_or_404(s_id)
+
+    playlist.songs.append(song)
+    db.session.commit()
+
+    return redirect(previous_url)
+
 
     
