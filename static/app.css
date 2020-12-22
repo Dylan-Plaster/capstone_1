@@ -89,3 +89,7 @@ body {
 .video-container {
   width: 45vw;
 }
+
+a {
+  color: #2a5db0;
+}

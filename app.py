@@ -1,13 +1,17 @@
 import os
-from flask import Flask, render_template, request, session, g, flash, redirect
+from flask import Flask, render_template, request, session, g, flash, redirect, Markup, url_for, Response
 from flask_debugtoolbar import DebugToolbarExtension
 from models import db, Playlist, Playlist_Song, Song, User, connect_db
 from forms import LoginForm, SignupForm, PlaylistForm
 from sqlalchemy.exc import IntegrityError
 import requests
 import praw
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs, urlencode
 import re
+from sqlalchemy import desc
+from secrets import SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET, SPOTIPY_REDIRECT_URI
+import spotipy
+from spotipy.oauth2 import SpotifyOAuth
 
 CURR_USER_KEY = 'curr_user'
 
@@ -59,26 +63,51 @@ def get_video_id(url):
     # http://www.youtube.com/watch?v=video_id
     # http://www.youtube.com/embed/video_id
     # http://www.youtube.com/v/video_id
-    query = urlparse(url)
+    # query = urlparse(url)
     
-    if query.hostname == 'youtu.be':
-        # If the hostname is youtu.be, the video id will be the next part of the url. Get it and exclude the slash
-        return query.path[1:]
-    if query.hostname in ('www.youtube.com', 'youtube.com'):
-        if query.path == '/watch':
-            path = parse_qs(query.query)
-            try:
-                return path['v'][0]
-            except KeyError:
-                return None
-        if query.path[:7] == '/embed/':
-            # check the first 7 characters after the hostname, if they have the /embed/ path:
-            return query.path.split('/')[2]
-        if query.path[:3] == '/v/':
-            return query.path.split('/')[2]
+    # if query.hostname == 'youtu.be':
+    #     # If the hostname is youtu.be, the video id will be the next part of the url. Get it and exclude the slash
+    #     return query.path[1:]
+    # if query.hostname in ('www.youtube.com', 'youtube.com'):
+    #     if query.path == '/watch':
+    #         path = parse_qs(query.query)
+    #         try:
+    #             return path['v'][0]
+    #         except KeyError:
+    #             return None
+    #     if query.path[:7] == '/embed/':
+    #         # check the first 7 characters after the hostname, if they have the /embed/ path:
+    #         return query.path.split('/')[2]
+    #     if query.path[:3] == '/v/':
+    #         return query.path.split('/')[2]
 
-    # all else failed? Return None
-    return None    
+    # # all else failed? Return None
+    # return None 
+    # if url.startswith(('youtu', 'www')):
+    #     url = 'http://' + url
+        
+    query = urlparse(url)
+
+    if 'youtube' in query.hostname:
+        
+        if query.path == '/watch':
+            return parse_qs(query.query)['v'][0]
+        elif query.path.startswith(('/embed/', '/v/')):
+            return query.path.split('/')[2]
+    elif 'youtu.be' in query.hostname:
+        return query.path[1:]
+    else:
+        
+        raise KeyError 
+    # query = urlparse(url)
+    # if query.hostname == 'youtu.be': return query.path[1:]
+    # if query.hostname in {'www.youtube.com', 'youtube.com'}:
+    #     if query.path == '/watch': return parse_qs(query.query)['v'][0]
+    #     if query.path[:7] == '/embed/': return query.path.split('/')[2]
+    #     if query.path[:3] == '/v/': return query.path.split('/')[2]
+    # # fail?
+    # return None
+
 
 
 def extract_title(title):
@@ -101,59 +130,71 @@ def extract_title(title):
     except AttributeError:
         return ('error','error')
 
-
-
 @app.route('/')
-def show_homepage():
+def redirect_home():
+    return redirect('/home/1')
+
+@app.route('/home')
+def redirect_first_page():
+    return redirect('/home/1')
+
+
+@app.route('/home/<int:page>')
+def show_homepage(page):
+    
     """show the homepage for the app.
        Users who are not logged in see login/Signup version,
        logged in users see their username on navbar"""
     
-    # Here we need to get a list of reddit posts from the subreddit.
-    # Default sort is HOT
-    posts = reddit.subreddit('ListenToThis').hot(limit=20)
-    
+
+    # The following line makes sure we're not trying to add a duplicate of a song already in the DB
+    songs_in_db = [song.post_id for song in Song.query.all()]
+
     # Here we want to exclude the posts stickied to the top of the sub by the moderators
     # Also, we want to save the info and post id into the database for later viewing
-    not_sticky = []
-    show_user = []
-    
-    # The following line makes sure we're not trying to add a duplicate of a song already in the DB
-    songs_in_db = [song.id for song in Song.query.all()]
-   
-    for post in posts:
-        if not post.stickied:
-            url = post.url
-            post.video_id = get_video_id(url)
-            if post.video_id != None:
-                not_sticky.append(post)
-    
-    for post in not_sticky:
-        if post.id not in songs_in_db and post.video_id != None:
-            (title, artist) = extract_title(post.title)
-            if title == 'error' or artist == 'error':
-                song = Song(id=post.id, post_title=post.title, link=post.video_id)
-                db.session.add(song)
-                db.session.commit()
-                show_user.append(song)
-            else:
-
-                song = Song(id=post.id, title=title, artist=artist, post_title=post.title, link=post.video_id)
-                db.session.add(song)
-                db.session.commit()
-                show_user.append(song)
-        elif post.id in songs_in_db and post.video_id != None:
-            song = Song.query.get(post.id)
-            show_user.append(song)
 
     
-    # import pdb
-    # pdb.set_trace()
+    if page % 5 == 0 or page == 1 or len(Song.query.all()) < 100:
+        # Here we need to get a list of reddit posts from the subreddit.
+        # Default sort is HOT
+        posts = reddit.subreddit('ListenToThis').hot(limit=(page*20))
+
+        for post in posts:
+            if not post.stickied:
+                if post.id not in songs_in_db:
+                    url = post.url
+                    try:
+                        video_id = get_video_id(url)
+                    except KeyError:
+                        continue
+                    if video_id != None:
+                            (title, artist) = extract_title(post.title)
+                            if title == 'error' or artist == 'error':
+                                song = Song(post_id=post.id, post_title=post.title, link=video_id)
+                                db.session.add(song)
+                                db.session.commit()
+                                # show_user.append(song)
+                            else:
+                                song = Song(post_id=post.id, title=title, artist=artist, post_title=post.title, link=video_id)
+                                db.session.add(song)
+                                db.session.commit()
+                                # show_user.append(song)
+                       
+    
+    
+    
+    
+    import pdb
+    pdb.set_trace
+        
+
+    show_user = Song.query.order_by(Song.id).paginate(page=page, error_out=False, max_per_page=20)
+  
     if g.user:
-        return render_template('home.html', user=g.user, posts=show_user)
+        return render_template('home.html', user=g.user, posts=show_user, page=page)
     else:
-        flash('Log in to create playlists!', 'warning')
-        return render_template('home.html', user=g.user, posts=show_user)
+        flash(Markup("<a href='/login'>Log in</a> to create playlists!"), 'warning')
+        return render_template('home.html', user=g.user, posts=show_user, page=page)
 
 
 @app.route('/login', methods=["GET", "POST"])
@@ -172,7 +213,7 @@ def login():
         if user:
             do_login(user)
             flash(f'Welcome, {user.username}!', 'success')
-            return redirect('/')
+            return redirect('/home/1')
         else:
             flash('Invalid credentials', 'danger')
     
@@ -204,7 +245,7 @@ def signup():
         
             do_login(user)
             flash(f'Welcome, {user.username}')
-            return redirect('/')
+            return redirect('/home/1')
     
         else:
             return render_template('signup.html', form=form)
@@ -221,7 +262,7 @@ def logout():
         user = User.query.get(session[CURR_USER_KEY])
         do_logout(user)
         flash(f'{user.username} logged out', 'success')
-        return redirect('/')
+        return redirect('/home/1')
 
 
 @app.route('/playlists')
@@ -284,7 +325,43 @@ def add_song(p_id, s_id):
     playlist.songs.append(song)
     db.session.commit()
 
+
     return redirect(previous_url)
+
+
+# ------------------------------------------------------------------------------------
+# Now for working with the spotify API:
+# ( AKA the hard part )
+
+@app.route('/spotify')
+def spotify_login():
+    """Sign user into their spotify using spotify Oauth"""
+
+    endpoint = 'https://accounts.spotify.com/authorize?'
+    params={"client_id": SPOTIPY_CLIENT_ID, "response_type": 'code', "redirect_uri" : 'http://localhost:5000/callback', 'scope' : 'playlist-modify-public', 'state' : 'shdtehg32'}
+    # request_data = (scheme='https', netloc='accounts.spotify.com', path='/authorize', query=)
+    query_str = urlencode(params)
+
+    url = endpoint + query_str
+        
+    if g.user:
+        return redirect(url)
+        # return redirect(url_for('https://accounts.spotify.com/authorize', client_id=SPOTIPY_CLIENT_ID, response_type='code',redirect_uri='http://localhost:5000/callback', scope='playlist-modify-public'))
+    #     resp = requests.get(
+    #         "https://accounts.spotify.com/authorize",
+    #         params={"client_id": SPOTIPY_CLIENT_ID, "response_type": 'code', "redirect_uri" : 'http://localhost/callback', 'scope' : 'playlist-modify-public', }
+    #    )
+    #     return resp
+
+
+    else:
+        flash(Markup("<a href='/login'>Log in or create an account</a> first"), 'danger')
+
+@app.route('/callback')
+def callback():
+    return Response.headers
+
+
 
 
     

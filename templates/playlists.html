@@ -5,6 +5,9 @@
 
   <div class="card my-1">
     <a href="/playlists/{{playlist.id}}"><h2>{{playlist.name}}</h2></a>
+    <a href="/users/{{playlist.user.id}}"
+      ><h4>by {{playlist.user.username}}</h4></a
+    >
     <h5>{{playlist.description}}</h5>
   </div>
 

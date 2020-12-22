@@ -58,6 +58,7 @@ class Playlist(db.Model):
     img = db.Column(db.String, default='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT6NPCLGI_gY9sNngd3XBui4wnSzgwQH2lmaw&usqp=CAU', nullable=False)
 
     songs = db.relationship('Song', secondary='playlists_songs', backref='playlists')
+    
 
 class Playlist_Song(db.Model):
     '''playlist_song'''
@@ -65,19 +66,21 @@ class Playlist_Song(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     playlist_id = db.Column(db.Integer, db.ForeignKey('playlists.id', ondelete='cascade'))
-    song_id = db.Column(db.String, db.ForeignKey('songs.id', ondelete='cascade'))
+    song_id = db.Column(db.Integer, db.ForeignKey('songs.id', ondelete='cascade'))
 
 class Song(db.Model):
     """song"""
     __tablename__ = 'songs'
 
-    id = db.Column(db.String, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True, unique=True)
+    post_id = db.Column(db.String, nullable=False, unique=True)
     title = db.Column(db.String)
     artist = db.Column(db.String)
     post_title = db.Column(db.String, nullable=False)
     link = db.Column(db.String, nullable=False)
     spotify_id = db.Column(db.String)
     rating = db.Column(db.String)
+
 
 
 def connect_db(app):
