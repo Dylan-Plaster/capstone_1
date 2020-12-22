@@ -359,9 +359,33 @@ def spotify_login():
 
 @app.route('/callback')
 def callback():
-    return Response.headers
+    """Handle the response from the user logging in with the Spotify Auth"""
 
-
-
-
+    user = g.user
+    args =  request.args
     
+    if 'errors' in args:
+        print('do something')
+    else:
+        code = args.get('code')
+        state = args.get('state')
+        
+        endpoint = 'https://accounts.spotify.com/api/token'
+        params = {'client_id' : SPOTIPY_CLIENT_ID, 'client_secret' : SPOTIPY_CLIENT_SECRET, 'grant_type' : 'authorization_code', 'code' : code, 'redirect_uri' : 'http://localhost:5000/callback'}
+
+        resp = requests.post(endpoint, data=params)
+
+        data = resp.json()
+        if 'error' in data:
+            flash('There was an error connecting to Spotify. Try again', 'danger')
+            return redirect('/home')
+        if 'access_token' in data:
+            access_token = data['access_token']
+            refresh_token = data['refresh_token']
+            g.user.spotify_token = access_token
+            g.user.spotify_refresh_token = refresh_token
+            db.session.commit()
+            
+        return render_template('test.html', user=g.user)
+
+

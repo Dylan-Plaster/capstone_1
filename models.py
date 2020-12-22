@@ -12,6 +12,7 @@ class User(db.Model):
     username = db.Column(db.String, nullable=False, unique=True)
     hashed_pw = db.Column(db.String, nullable=False)
     spotify_token = db.Column(db.String, unique=True)
+    spotify_refresh_token = db.Column(db.String)
 
     playlists = db.relationship('Playlist', backref='user')
 
