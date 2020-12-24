@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, request, session, g, flash, redirect, Markup, url_for, Response
+from flask import Flask, render_template, request, session, g, flash, redirect, Markup, url_for, Response, jsonify, json
 from flask_debugtoolbar import DebugToolbarExtension
 from models import db, Playlist, Playlist_Song, Song, User, connect_db
 from forms import LoginForm, SignupForm, PlaylistForm
@@ -39,6 +39,7 @@ def add_user_to_g():
         g.user = User.query.get(session[CURR_USER_KEY])
     else:
         g.user = None
+
 
 def do_login(user):
     """Add the user to flask session"""
@@ -184,17 +185,15 @@ def show_homepage(page):
     
     
     
-    import pdb
-    pdb.set_trace
         
 
-    show_user = Song.query.order_by(Song.id).paginate(page=page, error_out=False, max_per_page=20)
+    show_user = Song.query.order_by(Song.id.desc()).paginate(page=page, error_out=False, max_per_page=20)
   
     if g.user:
-        return render_template('home.html', user=g.user, posts=show_user, page=page)
+        return render_template('home.html', user=g.user, posts=show_user.items, page=page)
     else:
         flash(Markup("<a href='/login'>Log in</a> to create playlists!"), 'warning')
-        return render_template('home.html', user=g.user, posts=show_user, page=page)
+        return render_template('home.html', user=g.user, posts=show_user.items, page=page)
 
 
 @app.route('/login', methods=["GET", "POST"])
@@ -356,6 +355,7 @@ def spotify_login():
 
     else:
         flash(Markup("<a href='/login'>Log in or create an account</a> first"), 'danger')
+        return redirect('/home')
 
 @app.route('/callback')
 def callback():
@@ -372,7 +372,7 @@ def callback():
         
         endpoint = 'https://accounts.spotify.com/api/token'
         params = {'client_id' : SPOTIPY_CLIENT_ID, 'client_secret' : SPOTIPY_CLIENT_SECRET, 'grant_type' : 'authorization_code', 'code' : code, 'redirect_uri' : 'http://localhost:5000/callback'}
-
+        headers = {'Authorization' : f'Basic {SPOTIPY_CLIENT_ID}:{SPOTIPY_CLIENT_SECRET}'}
         resp = requests.post(endpoint, data=params)
 
         data = resp.json()
@@ -385,7 +385,123 @@ def callback():
             g.user.spotify_token = access_token
             g.user.spotify_refresh_token = refresh_token
             db.session.commit()
+        
+        # Now we need to get the user's spotify id and save it to the DB
+        endpoint = 'https://api.spotify.com/v1/me'
+        headers = {"Authorization" : "Bearer " + g.user.spotify_token}
+        res = requests.get(endpoint, headers=headers)
+        data = json.loads(res.text)
+        user_id = data['id']
+        user.spotify_id = user_id
+        db.session.commit()
             
-        return render_template('test.html', user=g.user)
+        return redirect('/home')
+    
+
+# @app.route('/playlists/<int:id>/spotify')
+# def convert_playlist(id):
+#     """Convert a playlist to a spotify playlist"""
+
+    
+
+#     if not g.user:
+#         flash('You must login to create spotify playlists!', 'warning')
+#         return redirect('/home')
+#     elif g.user.spotify_token == None:
+#         flash('You must link your spotify to create spotify playlists!', 'warning')
+#         return redirect('/home')
+#     else:
+#         playlist = Playlist.query.get_or_404(id)
+#         playlist_songs = []
+#         for song in playlist.songs:
+#             base_url = 'https://api.spotify.com/v1/search'
+#             params = {'q':f'track:{song.title} artist:{song.artist}', 'type' : 'track', 'limit' : 1}
+#             # headers = {'Authorization': f'Bearer {g.user.spotify_token}', 'Accept': 'application/json', 'Content-type': 'application/json'}
+#             headers = {'Authorization' : f'Bearer {g.user.spotify_token}', 'Accept' : 'application/json', 'Content-type' : 'application/json'}
+#             response = requests.get(base_url, headers=headers, data=params)
+#             return response
+#             if response.status_code != 200:
+#                 return Markup(response)
+#             else:
+#                 return redirect('/')
+@app.route('/playlists/<int:pid>/spotify')
+def convert_playlist(pid):
+    """Convert local playlist to spotify playlist"""
+
+    if not g.user:
+        flash('You must login to create spotify playlists!', 'warning')
+        return redirect('/home')
+    elif not g.user.spotify_token:
+        flash('You must link your spotify account to create spotify playlists!', 'warning')
+        return redirect('/home')
+    else:
+        headers={ 'Authorization': "Bearer " + g.user.spotify_token}
+
+        playlist = Playlist.query.get_or_404(pid)
+
+        if playlist.spotify_id == None:
+            # Create the playlist:
+            url = f'https://api.spotify.com/v1/users/{g.user.spotify_id}/playlists'
+            data = {'name' : playlist.name, 'description' : playlist.description, 'public' : 'True'}
+            res = requests.post(url, json=data, headers=headers)
+
+            data = json.loads(res.text)
+            playlist_sid = data['id']
+            playlist.spotify_id = playlist_sid
+            db.session.commit()
+            # # Now we must get the playlist id from spotify
+            # url = f'https://api.spotify.com/v1/me/playlists'
+            # res = requests.get(url, headers=headers)
+            # data = json.loads(res.text)
+            # playlist_sid = data['items'][0]['id']
+            # playlist.spotify_id = playlist_sid
+            # db.session.commit() 
+
+
+
+        for item in playlist.songs:
+            song = Song.query.get(item.id)
+
+            url = f'https://api.spotify.com/v1/search?q=track:{song.title}%20artist:{song.artist}&type=track'
+            response = requests.get(url, headers=headers)
+            if response.status_code == 200:
+                data = json.loads(response.text)
+                if len(data['tracks']['items']) == int(0):
+                    
+                    continue
+                else:
+                    spotify_id = data['tracks']['items'][0]['id']
+                    spotify_uri = data['tracks']['items'][0]['uri']
+                    song.spotify_id = spotify_id
+                    song.spotify_uri = spotify_uri
+                    db.session.commit()
+                    
+            else:
+                continue
+
+    
+    
+        data = {'uris':[]}
+        for item in playlist.songs:
+            song = Song.query.get(item.id)
+            
+            if song.spotify_id != None:
+                # Add the song uri to the list of uris to give to the spotify api:
+                data['uris'].append(song.spotify_uri)
+
+
+        headers = {'Authorization' : f'Bearer {g.user.spotify_token}', 'Content-Type' : 'application/json'}
+        url = f'https://api.spotify.com/v1/playlists/{playlist.spotify_id}/tracks'
+        res = requests.post(url, headers=headers, json=data)
+
+                
+
+        # import pdb
+        # pdb.set_trace()
+        return render_template('test.html', data=res)
+
+            
+            
+
 
 

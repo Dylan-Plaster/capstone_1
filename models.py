@@ -13,6 +13,7 @@ class User(db.Model):
     hashed_pw = db.Column(db.String, nullable=False)
     spotify_token = db.Column(db.String, unique=True)
     spotify_refresh_token = db.Column(db.String)
+    spotify_id = db.Column(db.String)
 
     playlists = db.relationship('Playlist', backref='user')
 
@@ -57,6 +58,7 @@ class Playlist(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='cascade'))
     description = db.Column(db.String)
     img = db.Column(db.String, default='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT6NPCLGI_gY9sNngd3XBui4wnSzgwQH2lmaw&usqp=CAU', nullable=False)
+    spotify_id = db.Column(db.String)
 
     songs = db.relationship('Song', secondary='playlists_songs', backref='playlists')
     
@@ -80,7 +82,8 @@ class Song(db.Model):
     post_title = db.Column(db.String, nullable=False)
     link = db.Column(db.String, nullable=False)
     spotify_id = db.Column(db.String)
-    rating = db.Column(db.String)
+    spotify_uri = db.Column(db.String)
+    
 
 
 
