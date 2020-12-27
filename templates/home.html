@@ -8,8 +8,37 @@
   /> -->
 </div>
 <div class="row">
-  <div class="col-2"></div>
-  <div class="col-8 justify-content-center">{% include 'post_card.html'%} 
+  <div class="col-2 justify-content-end">
+    {% if user %}
+      {% if not user.spotify_token%}
+      <div class="card rounded mx-2">
+        <div class="card-body">
+        <h5 class="card-title">Link your spotify account to convert your playlists to spotify</h5>
+        <div class="card-text"><a href="/spotify" class="btn btn-lg btn-success rounded-pill">Spotify</a></div>
+      </div>
+      </div>
+      {% else %}
+        <div class="card rounded ml-3 my-2">
+          <div class="card-body">
+            <h5 class="card-title">Get recommendations based on your playlists!</h5>
+            <p class="card-text">Create a spotify playlist of recommended songs based off your saved playlists. You can listen to your recommendations on the spotify app/web app</p>
+
+          </div>
+        </div>
+        {% for playlist in user.playlists %}
+          <div class="card rounded ml-3 my-2">
+            <div class="card-body">
+              <h5 class="card-title">{{playlist.name}}</h5>
+              <p class="card-text">{{playlist.description}}</p>
+              <a href="/playlists/{{playlist.id}}/recommend" class="btn btn-primary rounded pill">Get recommendations</a>
+            </div>
+          </div>
+        {% endfor %}
+
+      {% endif %}
+    {% endif %}
+  </div>
+  <div class="col-7 justify-content-center p-1">{% include 'post_card.html'%} 
     <div class="row justify-content-center">
 
       {% if page == 1 %}
@@ -20,7 +49,24 @@
       {% endif %}
   </div>
   </div>
-  <div class="col-2"></div>
+  <div class="col-3 justify-content-start p-0">
+    <div><h3 class="display-4">My playlists:</h3></div>
+      {% for playlist in user.playlists %}
+        <div class="card rounded my-3 mr-3">
+          <div class="card-body rounded">
+            <h5 class="card-title"><a href="/playlists/{{playlist.id}}">{{playlist.name}}</a></h5>
+            <p class="card-text">{{playlist.description}}</p>
+            <p class="card-text">Songs:
+              <ul>
+                {% for song in playlist.songs %}
+                  <li><b>{{song.title}}</b> by <b>{{song.artist}}</b></li>
+                {% endfor %}
+              </ul>
+            </p>
+          </div>
+        </div>
+      {% endfor %}
+  </div>
 </div>
 
 {% endblock %}

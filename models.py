@@ -14,6 +14,7 @@ class User(db.Model):
     spotify_token = db.Column(db.String, unique=True)
     spotify_refresh_token = db.Column(db.String)
     spotify_id = db.Column(db.String)
+    spotify_code = db.Column(db.String)
 
     playlists = db.relationship('Playlist', backref='user')
 

@@ -12,6 +12,7 @@ from sqlalchemy import desc
 from secrets import SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET, SPOTIPY_REDIRECT_URI
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
+import codecs
 
 CURR_USER_KEY = 'curr_user'
 
@@ -54,7 +55,7 @@ def do_logout(user):
 
 reddit = praw.Reddit(client_id="JLjDaGTCPpLteg",
      client_secret="K-vU4R4Ilp4gpmYB-RCfdeXAdCc0kw",
-     user_agent="web:JLjDaGTCPpLteg:ListenToThisPlaylist")
+     user_agent="web:JLjDaGTCPpLteg:ListenToThisPlaylist_01")
 
 
 def get_video_id(url):
@@ -66,27 +67,7 @@ def get_video_id(url):
     # http://www.youtube.com/v/video_id
     # query = urlparse(url)
     
-    # if query.hostname == 'youtu.be':
-    #     # If the hostname is youtu.be, the video id will be the next part of the url. Get it and exclude the slash
-    #     return query.path[1:]
-    # if query.hostname in ('www.youtube.com', 'youtube.com'):
-    #     if query.path == '/watch':
-    #         path = parse_qs(query.query)
-    #         try:
-    #             return path['v'][0]
-    #         except KeyError:
-    #             return None
-    #     if query.path[:7] == '/embed/':
-    #         # check the first 7 characters after the hostname, if they have the /embed/ path:
-    #         return query.path.split('/')[2]
-    #     if query.path[:3] == '/v/':
-    #         return query.path.split('/')[2]
-
-    # # all else failed? Return None
-    # return None 
-    # if url.startswith(('youtu', 'www')):
-    #     url = 'http://' + url
-        
+    
     query = urlparse(url)
 
     if 'youtube' in query.hostname:
@@ -100,14 +81,7 @@ def get_video_id(url):
     else:
         
         raise KeyError 
-    # query = urlparse(url)
-    # if query.hostname == 'youtu.be': return query.path[1:]
-    # if query.hostname in {'www.youtube.com', 'youtube.com'}:
-    #     if query.path == '/watch': return parse_qs(query.query)['v'][0]
-    #     if query.path[:7] == '/embed/': return query.path.split('/')[2]
-    #     if query.path[:3] == '/v/': return query.path.split('/')[2]
-    # # fail?
-    # return None
+    
 
 
 
@@ -336,15 +310,25 @@ def add_song(p_id, s_id):
 def spotify_login():
     """Sign user into their spotify using spotify Oauth"""
 
-    endpoint = 'https://accounts.spotify.com/authorize?'
-    params={"client_id": SPOTIPY_CLIENT_ID, "response_type": 'code', "redirect_uri" : 'http://localhost:5000/callback', 'scope' : 'playlist-modify-public', 'state' : 'shdtehg32'}
-    # request_data = (scheme='https', netloc='accounts.spotify.com', path='/authorize', query=)
-    query_str = urlencode(params)
-
-    url = endpoint + query_str
+    
         
     if g.user:
-        return redirect(url)
+        if not g.user.spotify_token:
+            endpoint = 'https://accounts.spotify.com/authorize?'
+            params={"client_id": SPOTIPY_CLIENT_ID, "response_type": 'code', "redirect_uri" : 'http://localhost:5000/callback', 'scope' : 'playlist-modify-public', 'state' : 'shdtehg32'}
+            # request_data = (scheme='https', netloc='accounts.spotify.com', path='/authorize', query=)
+            query_str = urlencode(params)
+
+            url = endpoint + query_str
+            return redirect(url)
+        else:
+            # endpoint = 'https://api.spotify.com/v1/me'
+            # headers = {'Authorization' : 'Bearer' + g.user.spotify_token}
+            # response = requests.get(url, headers=headers)
+            # if response.status_code == 401
+            if check_token:
+                return redirect('/home')
+
         # return redirect(url_for('https://accounts.spotify.com/authorize', client_id=SPOTIPY_CLIENT_ID, response_type='code',redirect_uri='http://localhost:5000/callback', scope='playlist-modify-public'))
     #     resp = requests.get(
     #         "https://accounts.spotify.com/authorize",
@@ -356,6 +340,67 @@ def spotify_login():
     else:
         flash(Markup("<a href='/login'>Log in or create an account</a> first"), 'danger')
         return redirect('/home')
+
+
+def check_token():
+    """Function to check the status of the current user's access token"""
+
+    endpoint = 'https://api.spotify.com/v1/me'
+    headers = {'Authorization' : 'Bearer' + g.user.spotify_token}
+    response = requests.get(endpoint, headers=headers)
+    data = json.loads(response.text)
+    if 'error' in data:
+            refresh_token()
+    else: 
+        return True
+
+
+def refresh_token():
+    """Refresh spotify token"""
+    import base64
+    endpoint = 'https://accounts.spotify.com/api/token'
+    string = SPOTIPY_CLIENT_ID + ':' + SPOTIPY_CLIENT_SECRET
+    # headers = {'Content-Type' : 'application/x-www-form-urlencoded'}
+    # encoded = base64.b64encode(bytes(string, 'base64'))
+    # headers =  { 'Authorization': f'Basic {encoded}'}
+    # params = {'grant_type' : 'refresh_token', 'refresh_token' : g.user.spotify_refresh_token}
+    params = {'client_id' : SPOTIPY_CLIENT_ID, 'client_secret' : SPOTIPY_CLIENT_SECRET, 'grant_type' : 'refresh_token', 'refresh_token' : g.user.spotify_refresh_token}
+    import requests
+    import logging
+
+    # These two lines enable debugging at httplib level (requests->urllib3->http.client)
+    # You will see the REQUEST, including HEADERS and DATA, and RESPONSE with HEADERS but without DATA.
+    # The only thing missing will be the response.body which is not logged.
+    try:
+        import http.client as http_client
+    except ImportError:
+        # Python 2
+        import httplib as http_client
+    http_client.HTTPConnection.debuglevel = 1
+
+    # You must initialize logging, otherwise you'll not see debug output.
+    logging.basicConfig()
+    logging.getLogger().setLevel(logging.DEBUG)
+    requests_log = logging.getLogger("requests.packages.urllib3")
+    requests_log.setLevel(logging.DEBUG)
+    requests_log.propagate = True
+
+
+    response = requests.post(endpoint,data=params)
+
+    data = json.loads(response.text)
+    
+    if 'error' in data:
+        flash('There was an error connecting to Spotify. Try again', 'danger')
+        return redirect('/home')
+    if 'access_token' in data:
+        access_token = data['access_token']
+        # refresh_token = data['refresh_token']
+        g.user.spotify_token = access_token
+        # g.user.spotify_refresh_token = refresh_token
+        db.session.commit()
+
+
 
 @app.route('/callback')
 def callback():
@@ -384,6 +429,7 @@ def callback():
             refresh_token = data['refresh_token']
             g.user.spotify_token = access_token
             g.user.spotify_refresh_token = refresh_token
+            g.user.spotify_code = code
             db.session.commit()
         
         # Now we need to get the user's spotify id and save it to the DB
@@ -428,23 +474,34 @@ def callback():
 def convert_playlist(pid):
     """Convert local playlist to spotify playlist"""
 
+    # If no user is logged in, redirect them home, they need to login before accessing this route
     if not g.user:
         flash('You must login to create spotify playlists!', 'warning')
         return redirect('/home')
+
+    # If the user has not linked their spotify account, redirect them home
     elif not g.user.spotify_token:
         flash('You must link your spotify account to create spotify playlists!', 'warning')
         return redirect('/home')
+
     else:
+ 
+        refresh_token()
+
+        # required headers for calling the spotify API:
         headers={ 'Authorization': "Bearer " + g.user.spotify_token}
 
+        # Get the playlist the user wants to add to spotify
         playlist = Playlist.query.get_or_404(pid)
 
+        # If the playlist does not have a saved spotify ID in the database, that means it is the first time the user has converted this playlist
         if playlist.spotify_id == None:
             # Create the playlist:
             url = f'https://api.spotify.com/v1/users/{g.user.spotify_id}/playlists'
             data = {'name' : playlist.name, 'description' : playlist.description, 'public' : 'True'}
             res = requests.post(url, json=data, headers=headers)
-
+            return res.text
+            
             data = json.loads(res.text)
             playlist_sid = data['id']
             playlist.spotify_id = playlist_sid
@@ -479,7 +536,18 @@ def convert_playlist(pid):
             else:
                 continue
 
-    
+        # Now we need to get a list of the tracks already on the spotify playlist in question to make sure we don't add duplicates:
+        on_spotify = []
+        headers = {'Authorization' : f'Bearer {g.user.spotify_token}', 'Content-Type' : 'application/json'}
+        url = f'https://api.spotify.com/v1/playlists/{playlist.spotify_id}/tracks'
+        res = requests.get(url, headers=headers)
+        data = json.loads(response.text)
+        for track in data['items']:
+            id = track['track']['id']
+            on_spotify.append(id)
+        import pdb
+        pdb.set_trace()
+
     
         data = {'uris':[]}
         for item in playlist.songs:
@@ -489,7 +557,7 @@ def convert_playlist(pid):
                 # Add the song uri to the list of uris to give to the spotify api:
                 data['uris'].append(song.spotify_uri)
 
-
+        # This request adds the songs to the playlist that was created earlier
         headers = {'Authorization' : f'Bearer {g.user.spotify_token}', 'Content-Type' : 'application/json'}
         url = f'https://api.spotify.com/v1/playlists/{playlist.spotify_id}/tracks'
         res = requests.post(url, headers=headers, json=data)
