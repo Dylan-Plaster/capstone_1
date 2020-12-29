@@ -13,6 +13,7 @@ from secrets import SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET, SPOTIPY_REDIRECT_U
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import codecs
+from prawcore.exceptions import RequestException
 
 CURR_USER_KEY = 'curr_user'
 
@@ -132,7 +133,11 @@ def show_homepage(page):
     if page % 5 == 0 or page == 1 or len(Song.query.all()) < 100:
         # Here we need to get a list of reddit posts from the subreddit.
         # Default sort is HOT
-        posts = reddit.subreddit('ListenToThis').hot(limit=(page*20))
+        try:
+            posts = reddit.subreddit('ListenToThis').hot(limit=(page*20))
+        except RequestException:
+            return render_template('reddit_error.html')
+            
 
         for post in posts:
             if not post.stickied:
@@ -217,7 +222,7 @@ def signup():
                 return render_template('signup.html', form=form)
         
             do_login(user)
-            flash(f'Welcome, {user.username}')
+            flash(f'Welcome, {user.username}', 'success')
             return redirect('/home/1')
     
         else:
@@ -313,7 +318,7 @@ def spotify_login():
     
         
     if g.user:
-        if not g.user.spotify_token:
+        if g.user.spotify_token == None:
             endpoint = 'https://accounts.spotify.com/authorize?'
             params={"client_id": SPOTIPY_CLIENT_ID, "response_type": 'code', "redirect_uri" : 'http://localhost:5000/callback', 'scope' : 'playlist-modify-public', 'state' : 'shdtehg32'}
             # request_data = (scheme='https', netloc='accounts.spotify.com', path='/authorize', query=)
@@ -326,8 +331,10 @@ def spotify_login():
             # headers = {'Authorization' : 'Bearer' + g.user.spotify_token}
             # response = requests.get(url, headers=headers)
             # if response.status_code == 401
-            if check_token:
+            if check_token():
                 return redirect('/home')
+        
+        
 
         # return redirect(url_for('https://accounts.spotify.com/authorize', client_id=SPOTIPY_CLIENT_ID, response_type='code',redirect_uri='http://localhost:5000/callback', scope='playlist-modify-public'))
     #     resp = requests.get(
@@ -486,7 +493,7 @@ def convert_playlist(pid):
 
     else:
  
-        refresh_token()
+        check_token()
 
         # required headers for calling the spotify API:
         headers={ 'Authorization': "Bearer " + g.user.spotify_token}
@@ -495,24 +502,24 @@ def convert_playlist(pid):
         playlist = Playlist.query.get_or_404(pid)
 
         # If the playlist does not have a saved spotify ID in the database, that means it is the first time the user has converted this playlist
-        if playlist.spotify_id == None:
-            # Create the playlist:
-            url = f'https://api.spotify.com/v1/users/{g.user.spotify_id}/playlists'
-            data = {'name' : playlist.name, 'description' : playlist.description, 'public' : 'True'}
-            res = requests.post(url, json=data, headers=headers)
-            return res.text
-            
-            data = json.loads(res.text)
-            playlist_sid = data['id']
-            playlist.spotify_id = playlist_sid
-            db.session.commit()
-            # # Now we must get the playlist id from spotify
-            # url = f'https://api.spotify.com/v1/me/playlists'
-            # res = requests.get(url, headers=headers)
-            # data = json.loads(res.text)
-            # playlist_sid = data['items'][0]['id']
-            # playlist.spotify_id = playlist_sid
-            # db.session.commit() 
+        # if playlist.spotify_id == None:
+        # Create the playlist:
+        url = f'https://api.spotify.com/v1/users/{g.user.spotify_id}/playlists'
+        data = {'name' : playlist.name, 'description' : playlist.description, 'public' : 'True'}
+        res = requests.post(url, json=data, headers=headers)
+        # return res.text
+        
+        data = json.loads(res.text)
+        playlist_sid = data['id']
+        playlist.spotify_id = playlist_sid
+        db.session.commit()
+        # # Now we must get the playlist id from spotify
+        # url = f'https://api.spotify.com/v1/me/playlists'
+        # res = requests.get(url, headers=headers)
+        # data = json.loads(res.text)
+        # playlist_sid = data['items'][0]['id']
+        # playlist.spotify_id = playlist_sid
+        # db.session.commit() 
 
 
 
@@ -541,32 +548,48 @@ def convert_playlist(pid):
         headers = {'Authorization' : f'Bearer {g.user.spotify_token}', 'Content-Type' : 'application/json'}
         url = f'https://api.spotify.com/v1/playlists/{playlist.spotify_id}/tracks'
         res = requests.get(url, headers=headers)
-        data = json.loads(response.text)
-        for track in data['items']:
-            id = track['track']['id']
-            on_spotify.append(id)
-        import pdb
-        pdb.set_trace()
+        # return render_template('test.html', data=res)
+        
+        if res.status_code != 400:
+            data = json.loads(res.text)
+            for track in data['items']:
+                id = track['track']['id']
+                on_spotify.append(id)
+        else:
+            import pdb
+            pdb.set_trace()
+            # This part should make sure that if the user deletes their playlist on spotify's app, this function still works. 
+            playlist.spotify_id = None
+            db.session.commit()
+            return redirect(f'/playlists/{playlist.id}/spotify')
+        
 
     
         data = {'uris':[]}
         for item in playlist.songs:
             song = Song.query.get(item.id)
             
-            if song.spotify_id != None:
+            
+            if song.spotify_id != None and song.spotify_id not in on_spotify:
                 # Add the song uri to the list of uris to give to the spotify api:
                 data['uris'].append(song.spotify_uri)
+                
+                
 
+        if len(data['uris']) == 0:
+            flash("Could not find any of those songs on Spotify! Add more songs and try again", 'warning')
+            return redirect(f'/playlists/{playlist.id}')
         # This request adds the songs to the playlist that was created earlier
         headers = {'Authorization' : f'Bearer {g.user.spotify_token}', 'Content-Type' : 'application/json'}
         url = f'https://api.spotify.com/v1/playlists/{playlist.spotify_id}/tracks'
         res = requests.post(url, headers=headers, json=data)
 
                 
-
+        
         # import pdb
         # pdb.set_trace()
-        return render_template('test.html', data=res)
+        # return render_template('test.html', data=res)
+        return redirect(f'/playlists/{playlist.id}')
 
             
             

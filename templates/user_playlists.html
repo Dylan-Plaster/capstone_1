@@ -1,11 +1,19 @@
 {% extends 'base.html' %} {% block content %}
-<div class="container">
-  <h1 class="display-1">{{owner.username}}'s Playlists:</h1>
-  {% for playlist in owner.playlists %}
+<div class="container text-center">
+  <h1 class="display-1 mb-4">{{owner.username}}'s Playlists:</h1>
+  {% if owner.playlists|length == 0 %}
+  <div class="row justify-content-center">
+    <div class="alert alert-info text-center" id="first_playlist_alert">
+      <a href="/playlists/new" class="alert-link">Create a new playlist</a>
+      first!
+    </div>
+  </div>
+  {% endif %} {% for playlist in owner.playlists %}
 
   <div class="card my-1">
     <a href="/playlists/{{playlist.id}}"><h2>{{playlist.name}}</h2></a>
     <h5>{{playlist.description}}</h5>
   </div>
-  {% endfor %} {% endblock %}
+  {% endfor %}
 </div>
+{% endblock %}
