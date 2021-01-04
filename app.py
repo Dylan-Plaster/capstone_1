@@ -21,13 +21,14 @@ CURR_USER_KEY = 'curr_user'
 
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///ListenToThis'
+app.config['SQLALCHEMY_DATABASE_URI'] = (
+    os.environ.get('DATABASE_URL', 'postgresql:///ListenToThis'))
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = True
 
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', "it's a secret")
 
-toolbar = DebugToolbarExtension(app)
+# toolbar = DebugToolbarExtension(app)
 
 connect_db(app)
 # db.drop_all()
@@ -125,6 +126,8 @@ def show_homepage(page):
     """Show the homepage for the app.
        Users who are not logged in see login/Signup version,
        logged in users see their username on navbar"""
+   
+
     
 
     # To ensure we don't add duplicates into the database, get a list of all songs already saved to DB
