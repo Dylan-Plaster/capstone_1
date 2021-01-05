@@ -1,10 +1,14 @@
 from unittest import TestCase
 import os
 from models import db, User, Song, Playlist, Playlist_Song
-from app import *
-from flask import session
+from urllib.parse import urlparse
+
+
 
 os.environ['DATABASE_URL'] = "postgresql:///L2T_test"
+
+from app import *
+from flask import session
 app.config['WTF_CSRF_ENABLED'] = False
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 
@@ -25,8 +29,8 @@ class ViewTest(TestCase):
     def setUp(self):
         """Set up test client and add test data"""
 
-       
-        # db.drop_all()
+        # db.session.expunge_all()
+        db.drop_all()
         db.create_all()
 
         self.client = app.test_client()
@@ -46,14 +50,20 @@ class ViewTest(TestCase):
         self.u3.id = u3_id
         self.u3.password = 'password3'
 
+        db.session.add(self.u1)
+        db.session.add(self.u2)
+        db.session.add(self.u3)
         db.session.commit()
 
 
     def tearDown(self):
+        db.session.rollback()
 
-        db.session.commit()
-        db.session.close_all()
-        db.drop_all()
+        # db.session.commit()
+        # db.session.close_all()
+        # db.session.close()
+        # db.engine.dispose()
+        # db.drop_all()
      
   
     
@@ -159,6 +169,30 @@ class ViewTest(TestCase):
             self.assertNotIn(CURR_USER_KEY, session)
             self.assertIn(f"{self.u1.username} logged out", html)
 
+
+    def test_playlists(self):
+        """Test the /playlists route that shows all playlists from all users"""
+        with self.client as client:
+            # Set up test playlist data with 2 users:
+            data1 = {'username':'testuser1', 'password':'password1'}
+            data2 = {'username':'testuser2', 'password':'password2'}
+            client.post('/login', data=data1)
+            client.post('/playlists/new', data={'name':'user1playlist', 'description':'user1description'})
+            client.post('/login', data=data2)
+            client.post('/playlists/new', data={'name':'user2playlist', 'description':'user2description'})
+
+            # Test GET /playlists, make sure playlists from both users appear here:
+            resp = client.get('/playlists')
+            html = resp.get_data(as_text=True)
+            self.assertIn('user1playlist', html)
+            self.assertIn('user1description', html)
+            self.assertIn('user2playlist', html)
+            self.assertIn('user2description', html)
+
+
+
+        
+
     def test_new_playlist(self):
         """Test the /playlists/new route"""
 
@@ -170,6 +204,64 @@ class ViewTest(TestCase):
             self.assertIn('You must be logged in to create a playlist!', html)
 
             # Now, login a user, test again. Should render new playlist form:
+            client.post('/login', data={'username':'testuser2', 'password':'password2'})
+            resp = client.get('/playlists/new')
+            html = resp.get_data(as_text=True)
+        
+            self.assertIn('<form method="POST">',html)
+
+            # Test POST /playlists/new. Should save playlist name and description and redirect to user's playlist page:
+            data1 = {"name": 'test_playlist_1', 'description':'description_test'}
+            resp = client.post('/playlists/new', data=data1)
+            self.assertEqual(resp.status_code, 302)
+            self.assertEqual(urlparse(resp.location).path, '/users/200/playlists')
+
+            data2 = {"name":'test_playlist_2', 'description':'description_test_2'}
+            resp = client.post('/playlists/new', data=data2, follow_redirects=True)
+            html = resp.get_data(as_text=True)
+            playlist = Playlist.query.filter_by(name='test_playlist_2').first()
+            self.assertIsNotNone(playlist)
+            self.assertEqual(playlist.name, 'test_playlist_2')
+            self.assertEqual(playlist.description, 'description_test_2')
+
+            # Test submitting the same playlist name a second time. Should flash error message and render template
+            resp = client.post('/playlists/new', data=data1)
+            html = resp.get_data(as_text=True)
+            self.assertIn('You already have a playlist with that name', html)
+
+
+    def test_user_playlists(self):
+        """Test the /users/<user_id>/playlists view route"""
+
+        with self.client as client:
+            # login user and create some playlists to use for test data
+            data = {'username' : 'testuser1', 'password' : 'password1'}
+            client.post('/login', data=data)
+            client.post('/playlists/new', data={'name':'1playlist1', 'description':'1description1'})
+            client.post('/playlists/new', data={'name':'2playlist2', 'description':'2description2'})
+            data = {'username' : 'testuser2', 'password' : 'password2'}
+            client.get('/logout')
+            client.post('/login', data=data)
+            client.post('/playlists/new', data={'name':'user2playlist', 'description':'user2description'})
+
+            # Test GET /users/100/playlists. Should display user1's playlists and not user2s
+            resp = client.get('users/100/playlists')
+            html = resp.get_data(as_text=True)
+            self.assertIn('1playlist1', html)
+            self.assertIn('2playlist2', html)
+            self.assertIn('1description1', html)
+            self.assertIn('2description2', html)
+            self.assertNotIn('user2playlist', html)
+            self.assertNotIn('user2description', html)
+
+
+
+
+
+
+            
+
+
             
 
 

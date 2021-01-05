@@ -30,7 +30,13 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', "it's a secret")
 
 # toolbar = DebugToolbarExtension(app)
 
+
+
+
 connect_db(app)
+
+# db.session.close()
+# db.engine.dispose()
 # db.drop_all()
 # db.create_all()
 
@@ -143,12 +149,14 @@ def show_homepage(page):
         # Default sort is HOT
         try:
             posts = reddit.subreddit('ListenToThis').hot(limit=(page*20))
+            
         except RequestException:
             # This can happen if the reddit API calls get rate limited
             return render_template('reddit_error.html')
             
 
         for post in posts:
+        
             # Exclude stickied posts : usually a weekly discussion/melting pot post
             if not post.stickied:
                 # Check to make sure the current post isn't already saved to the DB -- no duplicates
@@ -300,13 +308,21 @@ def new_playlist():
     else:
         form = PlaylistForm()
 
+        u_playlists = [playlist.name for playlist in g.user.playlists ]
+
         # If form is submitted:
         if form.validate_on_submit():
+            # import pdb
+            # pdb.set_trace()
             # save playlist to DB, redirect to user's playlist page
-            playlist = Playlist(name=form.name.data, description=form.description.data, user_id=g.user.id)
-            db.session.add(playlist)
-            db.session.commit()
-            return redirect(f'/users/{g.user.id}/playlists')
+            if form.name.data not in u_playlists:
+                playlist = Playlist(name=form.name.data, description=form.description.data, user_id=g.user.id)
+                db.session.add(playlist)
+                db.session.commit()
+                return redirect(f'/users/{g.user.id}/playlists')
+            else:
+                flash('You already have a playlist with that name', 'danger')
+                return render_template('new_playlist.html', user=g.user, form=form)
 
         else:
             # show new playlist form:
@@ -528,8 +544,7 @@ def convert_playlist(pid):
         # we can continue to have access to the API
         check_token()
 
-        # required headers for calling the spotify API:
-        headers={ 'Authorization': "Bearer " + g.user.spotify_token}
+       
 
         # Get the playlist the user wants to add to spotify
         playlist = Playlist.query.get_or_404(pid)
@@ -540,6 +555,16 @@ def convert_playlist(pid):
             playlist_sid = create_playlist(playlist.name, playlist.description)
             playlist.spotify_id = playlist_sid
             db.session.commit()
+        else:
+            # Otherwise, make sure the user is still following this playlist. If the user
+            # hits the 'delete' button on their spotify account, they will un-follow the playlist,
+            # but it will still exist
+            endpoint=f'https://api.spotify.com/v1/playlists/{playlist.spotify_id}/followers'
+            # required headers for calling the spotify API:
+            headers={ 'Authorization': "Bearer " + g.user.spotify_token, 'Content-Type':'application/json'}
+            response = requests.put(endpoint, headers=headers)
+            
+            
 
         # Get the spotify ids for all the songs in the playlist
         get_spotify_ids(playlist.songs)
