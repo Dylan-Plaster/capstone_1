@@ -254,6 +254,78 @@ class ViewTest(TestCase):
             self.assertNotIn('user2playlist', html)
             self.assertNotIn('user2description', html)
 
+            # Test trying to get playlists from a user that does not exist. Should redirect to /playlists and flash error
+            resp = client.get('/users/50/playlists', follow_redirects=True)
+            html = resp.get_data(as_text=True)
+            self.assertIn('Could not find that user', html)
+            
+    def test_add_song(self):
+        """Test the add_song route"""
+        with self.client as client:
+            # Test without user logged in. Should redirect and flash message:
+            resp = client.post('/playlists/1/add/1', follow_redirects=True)
+            html = resp.get_data(as_text=True)
+            self.assertIn('Log in to add songs', html)
+
+            # Log in user, create some sample playlists and songs to work with:
+            data = {'username' : 'testuser1', 'password' : 'password1'}
+            client.post('/login', data=data)
+            playlist = Playlist(id=100, name='playlist1', user_id=100, description='description')
+            song1 = Song(id=100, post_id=100, post_title='test1', title='song1', artist='artist1', link='https://youtu.be/DLzxrzFCyOs')
+            song2 = Song(id=200, post_id=200, post_title='test2', title='song2', artist='artist2', link='https://youtu.be/DLzxrzFCyOs')
+            song3 = Song(id=300, post_id=300, post_title='test3', title='song3', artist='artist3', link='https://youtu.be/DLzxrzFCyOs')
+
+            db.session.add(playlist)
+            db.session.add(song1)
+            db.session.add(song2)
+            db.session.add(song3)
+            db.session.commit()
+            
+            # Now test adding these songs to the playlist
+            client.post('/playlists/100/add/100')
+            client.post('/playlists/100/add/200')
+            client.post('/playlists/100/add/300')
+          
+            
+            songs = [song.id for song in Playlist.query.get(100).songs]
+            song1 = Song.query.get(100)
+            song2 = Song.query.get(200)
+            song3 = Song.query.get(300)
+            self.assertIn(song1.id, songs)
+            self.assertIn(song2.id, songs)
+            self.assertIn(song3.id, songs)
+            
+    
+    def test_spotify_login(self):
+        """Test the spotify login route"""
+        with self.client as client:
+            # Test without logged in user, should flash error message and redirect home
+            resp = client.get('/spotify', follow_redirects=True)
+            html = resp.get_data(as_text=True)
+            self.assertIn("<a href='/login'>Log in or create an account</a> first", html)
+            # Log in user:
+            data = {'username' : 'testuser1', 'password' : 'password1'}
+            client.post('/login', data=data)
+
+            # Test that the /spotify route redirects to the correct endpoint to log in with spotify
+            resp = client.get('/spotify')
+            self.assertEqual(resp.status_code, 302)
+            self.assertEqual(resp.location, f'https://accounts.spotify.com/authorize?client_id={SPOTIPY_CLIENT_ID}&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A5000%2Fcallback&scope=playlist-modify-public&state=shdtehg32')
+
+
+    def test_convert_playlist(self):
+        """Test the convert playlist view route"""
+
+        with self.client as client:
+            # Test with no logged in user, should flash error and redirect
+            resp = client.get('/playlists/1/spotify')
+            self.assertEqual(resp.status_code, 302)
+            resp = client.get('/playlists/1/spotify', follow_redirects=True)
+            html = resp.get_data(as_text=True)
+            self.assertIn('You must login to create spotify playlists!', html)
+
+
+
 
 
 

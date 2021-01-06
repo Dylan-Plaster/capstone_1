@@ -16,10 +16,16 @@
       integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN"
       crossorigin="anonymous"
     />
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,700;1,700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}" />
   </head>
   <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-info">
+    <nav class="navbar navbar-expand-lg navbar-dark">
       <a class="navbar-brand" href="#">Listen2ThisPlaylist</a>
       <button
         class="navbar-toggler"
@@ -97,9 +103,11 @@
         <h5>Playlists and recommendations from the r/ListenToThis subreddit</h5>
       </div>
     </div>
-    <div class="container" id="flash">
+    <div class="container d-flex justify-content-center" id="flash">
       {% for category, message in get_flashed_messages(with_categories=True) %}
-      <div class="alert alert-{{ category }} text-center">{{ message }}</div>
+      <div class="alert alert-{{ category }} text-center w-75">
+        {{ message }}
+      </div>
       {% endfor %}
     </div>
 

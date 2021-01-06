@@ -48,15 +48,29 @@
 }
 
 body {
-  background-color: rgb(220, 220, 220);
+  /* background-color: #f3f3f3; */
+  /* background-color: #e5eaf5; */
+
+  /* color: #3c1874; */
+  /* color: #932432; */
+  background-color: #dbd3db;
+  font-family: "Montserrat", sans-serif;
+}
+.navbar {
+  /* background-color: #932432; */
+  background-color: #de354c;
 }
 
 .navbar-nav > li > .dropdown-menu {
-  background-color: rgb(220, 220, 220);
+  background-color: #de354c;
 }
 
 .navbar-nav > li > .dropdown-menu > .dropdown-item:hover {
-  background-color: #17a2b8 !important;
+  background-color: #932432 !important;
+}
+
+.dropdown-item {
+  color: white !important;
 }
 
 #header_img {
@@ -96,4 +110,33 @@ a {
 
 #first_playlist_alert {
   width: 50%;
+}
+
+.post-card {
+  border-radius: 15px;
+  /* background-color: #f3f3f3; */
+  border: None;
+  /* border: 2px solid #283747; */
+  background-color: #dbd3db;
+
+  /* background-color: rgb(220, 220, 220); */
+  /* background-color: #e5eaf5; */
+}
+
+.card-top {
+  background-color: #932432;
+  color: white;
+  font-family: "Montserrat", sans-serif;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.my-playlists {
+  color: #3c1874;
+}
+
+.my-playlists-hr {
+  background-color: #de354c;
+  height: 5px;
+  border-radius: 1px;
 }

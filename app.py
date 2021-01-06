@@ -144,11 +144,13 @@ def show_homepage(page):
 
     
     # The API call loads enough posts for 5 pages at a time. If the page number is a multiple of 5, load more
-    if page % 5 == 0 or page == 1 or len(Song.query.all()) < 100:
+    if page % 5 == 0 or page == 1 or len(Song.query.all()) < page*20:
         # Here we need to get a list of reddit posts from the subreddit.
         # Default sort is HOT
         try:
-            posts = reddit.subreddit('ListenToThis').hot(limit=(page*20))
+            # import pdb
+            # pdb.set_trace()
+            posts = reddit.subreddit('ListenToThis').hot(limit=(page*25))
             
         except RequestException:
             # This can happen if the reddit API calls get rate limited
@@ -175,14 +177,20 @@ def show_homepage(page):
                             # This can be caused by the post not following the correct title format or other unexpected characters in the regular expression
                             if title == 'error' or artist == 'error':
                                 # Save the song to DB
-                                song = Song(post_id=post.id, post_title=post.title, link=video_id)
-                                db.session.add(song)
-                                db.session.commit()
+                                try:
+                                    song = Song(post_id=post.id, post_title=post.title, link=video_id)
+                                    db.session.add(song)
+                                    db.session.commit()
+                                except IntegrityError:
+                                    continue
                                 # show_user.append(song)
                             else:
-                                song = Song(post_id=post.id, title=title, artist=artist, post_title=post.title, link=video_id)
-                                db.session.add(song)
-                                db.session.commit()
+                                try:
+                                    song = Song(post_id=post.id, title=title, artist=artist, post_title=post.title, link=video_id)
+                                    db.session.add(song)
+                                    db.session.commit()
+                                except IntegrityError:
+                                    continue
                                 # show_user.append(song)
                        
     
@@ -191,8 +199,8 @@ def show_homepage(page):
     
         
     # get posts to show the user from the database. Paginate the results. The page is specified in the query string
-    show_user = Song.query.order_by(Song.id.desc()).paginate(page=page, error_out=False, max_per_page=20)
-  
+    show_user = Song.query.order_by(Song.id).paginate(page=page, error_out=False, max_per_page=20)
+    
     # If no user is logged in, flash a message telling them to login
     if g.user:
         return render_template('home.html', user=g.user, posts=show_user.items, page=page)
@@ -318,7 +326,7 @@ def new_playlist():
             if form.name.data not in u_playlists:
                 playlist = Playlist(name=form.name.data, description=form.description.data, user_id=g.user.id)
                 db.session.add(playlist)
-                db.session.commit()
+                db.session.commit() 
                 return redirect(f'/users/{g.user.id}/playlists')
             else:
                 flash('You already have a playlist with that name', 'danger')
@@ -335,7 +343,7 @@ def user_playlists(id):
      If that user is not found redirect to all playlists and flash error"""
     
     
-    owner = User.query.get_or_404(id)
+    owner = User.query.get(id)
 
     # If specified user can't be found (IE they have been deleted), show error message and redirect to all playlists
     if not owner:
@@ -386,6 +394,7 @@ def add_song(p_id, s_id):
     db.session.commit()
 
     # Redirect back to the page the user came from 
+    flash(f'Added {song.title} to {playlist.name}')
     return redirect(previous_url)
 
 
