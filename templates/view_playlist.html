@@ -1,10 +1,10 @@
 {% extends 'base.html' %} {% block content %}
 <div class="container">
-  <h1 class="display-1">{{playlist.name}}</h1>
-  <h5 class="display-5">by <a href="/users/{{playlist.user.id}}/playlists">{{playlist.user.username}}</h5></a>
+  <h1 class="display-1 text-center view-playlist-name">{{playlist.name}}</h1>
+  <h5 class="display-5 text-center">by <a href="/users/{{playlist.user.id}}/playlists">{{playlist.user.username}}</h5></a>
 
   {% if user.id == playlist.user.id %}
-  <a href="/playlists/{{playlist.id}}/spotify" class="btn btn-lg btn-info rounded-pill">Convert this to a spotify playlist (must link your spotify account)</a>
+  <a href="/playlists/{{playlist.id}}/spotify" class="btn btn-lg btn-success rounded-pill text-center convert-button">Convert this to a spotify playlist (must link your spotify account)</a>
   {% endif %}
   <ul class="mt-3">
     {% with posts=playlist.songs %}

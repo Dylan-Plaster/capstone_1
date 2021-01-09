@@ -1,6 +1,7 @@
-{% extends 'base.html' %} {% block content %}
-<div class="container text-center">
-  <h1 class="display-1 mb-4">{{owner.username}}'s Playlists:</h1>
+{% extends 'base.html' %} {% block content %} {% if owner %}
+<div class="container text-center fill rounded mt-0 user-playlists-bg">
+  <h1 class="user-playlists mb-4">{{owner.username}}'s Playlists:</h1>
+  <hr class="red-hr" />
   {% if owner.playlists|length == 0 %}
   <div class="row justify-content-center">
     <div class="alert alert-info text-center" id="first_playlist_alert">
@@ -10,10 +11,29 @@
   </div>
   {% endif %} {% for playlist in owner.playlists %}
 
-  <div class="card my-1">
-    <a href="/playlists/{{playlist.id}}"><h2>{{playlist.name}}</h2></a>
+  <div class="card my-2 playlist-card w-75">
+    <a href="/playlists/{{playlist.id}}"><h1>{{playlist.name}}</h1></a>
     <h5>{{playlist.description}}</h5>
   </div>
   {% endfor %}
 </div>
-{% endblock %}
+{% else %}
+<div class="container text-center fill rounded mt-0 user-playlists-bg">
+  <h1 class="user-playlists mb-4">All Playlists:</h1>
+  <hr class="red-hr" />
+  {% if playlists|length == 0 %}
+  <div class="row justify-content-center">
+    <div class="alert alert-info text-center" id="first_playlist_alert">
+      <a href="/playlists/new" class="alert-link">Create a new playlist</a>
+      first!
+    </div>
+  </div>
+  {% endif %} {% for playlist in playlists %}
+
+  <div class="card my-2 playlist-card w-75">
+    <a href="/playlists/{{playlist.id}}"><h1>{{playlist.name}}</h1></a>
+    <h5>{{playlist.description}}</h5>
+  </div>
+  {% endfor %}
+</div>
+{% endif %} {% endblock %}

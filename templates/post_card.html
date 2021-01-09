@@ -1,56 +1,60 @@
 {% for submission in posts %}
-<div class="card my-1 post-card">
+<div class="card my-2 post-card mx-1">
   <div class="card-body">
-    <div class="row">
-      <div class="col-4 justify-content-end">
-        <div class="row h-100">
+    <div class="row justify-content-between">
+      <div class="col-4 justify-content-center text-center pr-5">
+        <div class="row h-25">
           <div class="col-12 justify-content-center text-center card-top">
             {% if submission.title %}
-            <h4 class="post-title my-2">{{submission.title}}</h4>
-            <h5 class="post-title my-2">by {{submission.artist}}</h5>
+            <h4 class="post-title">{{submission.title}}</h4>
+            <h5 class="post-artist my-2">by {{submission.artist}}</h5>
             {% else %}
-            <h4 class="post-title my-2">{{submission.post_title}}</h4>
+            <h4 class="post-title">{{submission.post_title}}</h4>
             {% endif %}
           </div>
         </div>
-        {% if user != None %}
-        <div class="dropdown">
-          <button
-            class="btn btn-secondary dropdown-toggle"
-            type="button"
-            id="dropdownMenuButton"
-            data-toggle="dropdown"
-            aria-haspopup="true"
-            aria-expanded="false"
-          >
-            Add to playlist
-          </button>
-          <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-            {% for playlist in user.playlists%}
-            <form
-              action="/playlists/{{playlist.id}}/add/{{submission.id}}"
-              method="POST"
+        <div class="row card-bottom justify-content-center pl-3">
+          {% if user != None %}
+          <!-- <div class="card-body"> -->
+          <div class="dropdown card-drop">
+            <button
+              class="btn btn-card dropdown-toggle text-center"
+              type="button"
+              id="dropdownMenuButton"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false"
             >
-              <button class="dropdown-item" type="submit">
-                {{playlist.name}}
-              </button>
-            </form>
-            {% endfor %}
-            <div class="dropdown-divider"></div>
-            {% if user.playlists|length == 0 %}
-            <a class="dropdown-item" href="/playlists/new"
-              >Create a playlist first!</a
-            >
-            {% else %}
-            <a href="/playlists/new" class="dropdown-item"
-              >Create New Playlist</a
-            >
-            {% endif %}
+              Add to playlist
+            </button>
+            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+              {% for playlist in user.playlists%}
+              <form
+                action="/playlists/{{playlist.id}}/add/{{submission.id}}"
+                method="POST"
+              >
+                <button class="dropdown-item card-drop" type="submit">
+                  {{playlist.name}}
+                </button>
+              </form>
+              {% endfor %} {% if user.playlists|length == 0 %}
+              <a class="dropdown-item card-drop" href="/playlists/new"
+                >Create a playlist first!</a
+              >
+              {% else %}
+              <div class="dropdown-divider"></div>
+              <a href="/playlists/new" class="dropdown-item"
+                >Create New Playlist</a
+              >
+              {% endif %}
+            </div>
           </div>
+          <!-- </div> -->
+
+          {% endif %}
         </div>
-        {% endif %}
       </div>
-      <div class="col-8 justify-content-start d-flex">
+      <div class="col-8 justify-content-center d-flex p-0">
         <div class="video-container">
           <div class="video-wrapper">
             <iframe

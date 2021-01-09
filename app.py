@@ -65,7 +65,7 @@ def do_logout(user):
 # This sets up the requirements for the Python Reddit API Wrapper - PRAW. This will be used to get information from the reddit API
 reddit = praw.Reddit(client_id="JLjDaGTCPpLteg",
      client_secret="K-vU4R4Ilp4gpmYB-RCfdeXAdCc0kw",
-     user_agent="web:JLjDaGTCPpLteg:ListenToThisPlaylist_01")
+     user_agent="web:JLjDaGTCPpLteg:ListenToThisPlaylist_02")
 
 
 def get_video_id(url):
@@ -144,7 +144,7 @@ def show_homepage(page):
 
     
     # The API call loads enough posts for 5 pages at a time. If the page number is a multiple of 5, load more
-    if page % 5 == 0 or page == 1 or len(Song.query.all()) < page*20:
+    if page % 5 == 0 or page == 1 and len(Song.query.all()) < page*20:
         # Here we need to get a list of reddit posts from the subreddit.
         # Default sort is HOT
         try:
@@ -194,12 +194,12 @@ def show_homepage(page):
                                 # show_user.append(song)
                        
     
-    
+    #
     
     
         
     # get posts to show the user from the database. Paginate the results. The page is specified in the query string
-    show_user = Song.query.order_by(Song.id).paginate(page=page, error_out=False, max_per_page=20)
+    show_user = Song.query.order_by(Song.id.desc()).paginate(page=page, error_out=False, max_per_page=20)
     
     # If no user is logged in, flash a message telling them to login
     if g.user:
@@ -302,7 +302,7 @@ def logout():
 def playlists():
     """Show all playlists from all users"""
     playlists = Playlist.query.all()
-    return render_template('playlists.html', user=g.user, playlists=playlists)
+    return render_template('user_playlists.html', user=g.user, playlists=playlists)
     
 
 @app.route('/playlists/new', methods=['GET', "POST"])
@@ -394,7 +394,7 @@ def add_song(p_id, s_id):
     db.session.commit()
 
     # Redirect back to the page the user came from 
-    flash(f'Added {song.title} to {playlist.name}')
+    flash(f'Added {song.title} to {playlist.name}', 'success')
     return redirect(previous_url)
 
 

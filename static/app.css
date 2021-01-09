@@ -5,7 +5,7 @@
   background-position: 50% 22%;
   background-repeat: no-repeat; /* Do not repeat the image */
   background-size: 110% 320%;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
   position: relative;
   overflow: hidden;
 }
@@ -49,11 +49,12 @@
 
 body {
   /* background-color: #f3f3f3; */
+  background-color: #ebecf2;
   /* background-color: #e5eaf5; */
 
   /* color: #3c1874; */
   /* color: #932432; */
-  background-color: #dbd3db;
+  /* background-color: #dbd3db; */
   font-family: "Montserrat", sans-serif;
 }
 .navbar {
@@ -69,8 +70,123 @@ body {
   background-color: #932432 !important;
 }
 
-.dropdown-item {
+.navbar-nav > li > .dropdown-menu > .dropdown-item {
   color: white !important;
+}
+
+.card-drop > .btn:hover {
+  /* color: #f3f3f3 !important; */
+  color: #ebecf2 !important;
+}
+
+.card-drop > .dropdown-menu {
+  background-color: #932432;
+}
+
+.card-drop > .dropdown-menu > a {
+  color: white;
+}
+.card-drop > .dropdown-menu > form > button {
+  color: white;
+}
+.card-drop > .dropdown-menu > form > button:hover {
+  background-color: #de354c !important;
+}
+.card-drop > .dropdown-menu > a:hover {
+  background-color: #de354c;
+}
+
+.card-bottom {
+  /* background-color: #932432; */
+  position: relative;
+  top: 50%;
+}
+
+.spotify-card {
+  /* background-color: #f3f3f3; */
+  background-color: #ebecf2;
+  /* border: None; */
+  color: #3c1874;
+  border-radius: 20px;
+  border: 2px solid #3c1874;
+}
+
+.btn-spotify {
+  width: 75%;
+  margin-left: 10%;
+}
+
+.spotify-card > .card-body > .card-title {
+  font-size: 2rem;
+}
+
+.spotify-card-user > .card-body > .card-title {
+  font-size: 2rem;
+}
+
+@media (max-width: 1300px) {
+  .spotify-card > .card-body > .card-title {
+    font-size: 1.3rem;
+  }
+  .post-title {
+    font-size: 1rem !important;
+  }
+  .post-artist {
+    font-size: 0.5rem !important;
+  }
+  .my-playlists {
+    font-size: 3rem !important;
+  }
+
+  .user-playlists {
+    font-size: 3.5rem !important;
+  }
+
+  .playlist-card > a > h1 {
+    font-size: 3rem !important;
+  }
+
+  .btn-lg {
+    max-width: 100% !important;
+    font-size: 0.9rem !important ;
+  }
+}
+
+.playlist-card {
+  /* background-color: #283747; */
+  /* background-color: #ebecf2; */
+  background-color: #e9e4f0;
+  border: solid 2px #283747;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 20px;
+  color: #f3f3f3;
+}
+
+.playlist-card > h5 {
+  color: #932432;
+}
+
+.fill {
+  min-height: 100vh;
+  height: 100vh;
+}
+.playlist-card > a {
+  color: #3c1874;
+}
+
+.user-playlists {
+  font-size: 5.5rem;
+  color: #ebecf2;
+}
+
+.user-playlists-bg {
+  background-color: #283747;
+}
+
+.playlist-card > a > h1 {
+  font-size: 4rem;
 }
 
 #header_img {
@@ -81,6 +197,18 @@ body {
 
 .pill-btn {
   width: 225px !important;
+}
+
+.btn-purple {
+  color: white;
+  background-color: #3c1874;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.btn-purple:hover {
+  color: #de354c !important;
 }
 
 .video-wrapper {
@@ -117,26 +245,95 @@ a {
   /* background-color: #f3f3f3; */
   border: None;
   /* border: 2px solid #283747; */
-  background-color: #dbd3db;
-
+  /* background-color: #dbd3db; */
+  /* background-color: #283747; */
+  /* background-color: #3c1874; */
+  background-color: #932432;
   /* background-color: rgb(220, 220, 220); */
   /* background-color: #e5eaf5; */
 }
 
+.post-title {
+  padding-top: 10px;
+  padding-right: 5px;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.post-artist {
+  font-size: 0.8rem;
+}
+
 .card-top {
-  background-color: #932432;
-  color: white;
+  /* background-color: #932432; */
+  /* background-color: #f3f3f3; */
+  background-color: #ebecf2;
+  color: #3c1874;
   font-family: "Montserrat", sans-serif;
-  margin-left: 10px;
-  margin-right: 10px;
+  /* margin-left: 10px;
+  margin-right: 200px; */
+  margin-left: 5%;
+
+  border-radius: 25px;
 }
 
 .my-playlists {
   color: #3c1874;
+  font-size: 3rem;
 }
 
-.my-playlists-hr {
+.btn-card {
+  background-color: #932432;
+  color: white;
+}
+
+.red-hr {
   background-color: #de354c;
   height: 5px;
-  border-radius: 1px;
+  border-radius: 999px;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.purple-hr {
+  background-color: #3c1874;
+  height: 5px;
+  border-radius: 999px;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.convert-button {
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.view-playlist-name {
+  color: #3c1874;
+}
+
+.home-playlist-card {
+  /* background-color: #f3f3f3; */
+  background-color: #ebecf2;
+  /* background-color: #283747; */
+  border: solid 2px #3c1874;
+  border-radius: 10px;
+  /* border: None; */
+  color: #932432;
+}
+
+.home-playlist-card > div > h2 > a {
+  /* color: #932432; */
+  color: #de354c;
+}
+
+.home-song-title {
+  font-size: 1.5rem;
+}
+
+.home-song-artist {
+  font-size: 1rem;
 }

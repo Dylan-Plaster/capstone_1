@@ -103,12 +103,13 @@
         <h5>Playlists and recommendations from the r/ListenToThis subreddit</h5>
       </div>
     </div>
-    <div class="container d-flex justify-content-center" id="flash">
-      {% for category, message in get_flashed_messages(with_categories=True) %}
-      <div class="alert alert-{{ category }} text-center w-75">
-        {{ message }}
+    <div class="row justify-content-center" id="flash">
+      <div class="col-6 justify-content-center">
+        {% for category, message in get_flashed_messages(with_categories=True)
+        %}
+        <div class="alert alert-{{ category }} text-center ">{{ message }}</div>
+        {% endfor %}
       </div>
-      {% endfor %}
     </div>
 
     {% block content %} {% endblock %}
