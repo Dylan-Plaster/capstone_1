@@ -9,7 +9,6 @@ import praw
 from urllib.parse import urlparse, parse_qs, urlencode
 import re
 from sqlalchemy import desc
-# from secrets import SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET, SPOTIPY_REDIRECT_URI
 from spotipy.oauth2 import SpotifyOAuth
 import codecs
 from prawcore.exceptions import RequestException
