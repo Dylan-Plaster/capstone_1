@@ -28,8 +28,8 @@ app.config['SQLALCHEMY_ECHO'] = True
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', "it's a secret")
 
 # toolbar = DebugToolbarExtension(app)
-SPOTIPY_CLIENT_ID = os.environ.get(['SPOTIPY_CLIENT_ID'])
-SPOTIPY_CLIENT_SECRET = os.environ.get(['SPOTIPY_CLIENT_SECRET'])
+SPOTIPY_CLIENT_ID = os.environ.get('SPOTIPY_CLIENT_ID')
+SPOTIPY_CLIENT_SECRET = os.environ.get('SPOTIPY_CLIENT_SECRET')
 
 
 
