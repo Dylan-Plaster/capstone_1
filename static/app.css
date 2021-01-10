@@ -311,6 +311,12 @@ a {
   transform: translateX(-50%);
 }
 
+.recommend-button {
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
 .view-playlist-name {
   color: #3c1874;
 }

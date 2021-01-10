@@ -15,6 +15,7 @@ from spotipy.oauth2 import SpotifyOAuth
 import codecs
 from prawcore.exceptions import RequestException
 import random
+from psycopg2.errors import UniqueViolation
 
 CURR_USER_KEY = 'curr_user'
 
@@ -181,8 +182,9 @@ def show_homepage(page):
                                     song = Song(post_id=post.id, post_title=post.title, link=video_id)
                                     db.session.add(song)
                                     db.session.commit()
-                                except IntegrityError:
+                                except:
                                     continue
+                                
                                 # show_user.append(song)
                             else:
                                 try:
@@ -737,7 +739,7 @@ def recommend(pid):
     
     # The recommendation algorithm takes up to 5 songs, so we need to choose 5 at random to pass to the API
     if len(on_spotify) == 0:
-        flash('Looks like none of the songs in this playlist are on Spotify! Add more songs and try again', 'danger')
+        flash("Looks like none of the songs in this playlist are on Spotify, or you didn't add any new songs! Add more songs and try again", 'danger')
         return redirect(f'/playlists/{pid}')
     else:
         try:
@@ -771,8 +773,8 @@ def recommend(pid):
     res = requests.post(url, headers=headers, json=track_uris)
     
     
-
-    return render_template('test.html', data=res.text)
+    previous_url = request.referrer
+    return redirect(previous_url)
 
 
 
