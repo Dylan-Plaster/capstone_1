@@ -9,7 +9,8 @@ import praw
 from urllib.parse import urlparse, parse_qs, urlencode
 import re
 from sqlalchemy import desc
-from secrets import SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET, SPOTIPY_REDIRECT_URI
+# from secrets import SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET, SPOTIPY_REDIRECT_URI
+from boto.s3.connection import S3Connection
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import codecs
@@ -30,6 +31,8 @@ app.config['SQLALCHEMY_ECHO'] = True
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', "it's a secret")
 
 # toolbar = DebugToolbarExtension(app)
+SPOTIPY_CLIENT_ID = S3Connection(os.environ['SPOTIPY_CLIENT_ID'])
+SPOTIPY_CLIENT_SECRET = S3Connection(os.environ['SPOTIPY_CLIENT_SECRET'])
 
 
 
