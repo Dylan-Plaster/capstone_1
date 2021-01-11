@@ -3,6 +3,7 @@
 ## This project is deployed at https://listen2thisplaylist.herokuapp.com
 This website works with the reddit API to get posts from the r/ListenToThis subreddit, which describes itself as "the place to discover new and overlooked music". These posts are displayed on the homepage, where users can listen to the songs through embedded youtube videos. Logged in users can create playlists and add songs to them. These playlists can be listened to on the website, or converted to Spotify playlists via the Spotify API for listening on the go. Of course, not every artist is on Spotify, so if a song can't be found through the API's search function it will not show up in the Spotify version of the playlist. Once a Spotify version of a playlist has been created, users can also have a recommendation playlist created based on a playlist they crafted, which is automatically added to their Spotify account.
 
+
 #### The standard user flow of this website is as follows:
 - Create account/login
  - Link Spotify account (optional to create playlists)
@@ -14,3 +15,5 @@ This website works with the reddit API to get posts from the r/ListenToThis subr
 
 
 The APIs used in this project are the Spotify and Reddit APIs: www.reddit.com and https://api.spotify.com . The Reddit API is used to fetch post data from the r/ListenToThis Subreddit, and the Spotify API is used to log in users and create playlists on their account. 
+
+This project was created in Python, HTML5, and CSS using Flask, SQLAlchemy, Jinja2, and Postgresql and is deployed through Heroku. 
