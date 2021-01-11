@@ -415,7 +415,7 @@ def spotify_login():
 
             # Set up requrements for spotify Oauth:
             endpoint = 'https://accounts.spotify.com/authorize?'
-            params={"client_id": SPOTIPY_CLIENT_ID, "response_type": 'code', "redirect_uri" : 'http://localhost:5000/callback', 'scope' : 'playlist-modify-public', 'state' : 'shdtehg32'}
+            params={"client_id": SPOTIPY_CLIENT_ID, "response_type": 'code', "redirect_uri" : 'https://listen2thisplaylist.herokuapp.com/callback', 'scope' : 'playlist-modify-public', 'state' : 'shdtehg32'}
             # encode this information into the query string:
             query_str = urlencode(params)
 
@@ -499,7 +499,7 @@ def callback():
         
         # Set up parameters for a post request to ask for an access token:
         endpoint = 'https://accounts.spotify.com/api/token'
-        params = {'client_id' : SPOTIPY_CLIENT_ID, 'client_secret' : SPOTIPY_CLIENT_SECRET, 'grant_type' : 'authorization_code', 'code' : code, 'redirect_uri' : 'http://localhost:5000/callback'}
+        params = {'client_id' : SPOTIPY_CLIENT_ID, 'client_secret' : SPOTIPY_CLIENT_SECRET, 'grant_type' : 'authorization_code', 'code' : code, 'redirect_uri' : 'https://listen2thisplaylist.herokuapp.com/callback'}
         headers = {'Authorization' : f'Basic {SPOTIPY_CLIENT_ID}:{SPOTIPY_CLIENT_SECRET}'}
         resp = requests.post(endpoint, data=params)
 
