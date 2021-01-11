@@ -4,8 +4,9 @@
   <h5 class="display-5 text-center">by <a href="/users/{{playlist.user.id}}/playlists">{{playlist.user.username}}</h5></a>
 
   {% if user %}
-  <a href="/playlists/{{playlist.id}}/spotify" class="btn btn-lg btn-success rounded-pill text-center convert-button">Convert this to a spotify playlist (must link your spotify account)</a>
-  <a href="/playlists/{{playlist.id}}/recommend" class="btn btn-lg btn-success rounded-pill text-center recommend-button mt-3">Create a recommendation playlist on Spotify (must link your spotify account)</a>
+  
+  <a href="/playlists/{{playlist.id}}/spotify" class="btn btn-lg btn-success rounded-pill text-center convert-button">Create this playlist on spotify (must link your spotify account)</a>
+  <a href="/playlists/{{playlist.id}}/recommend" class="btn btn-lg btn-success rounded-pill text-center recommend-button mt-3">Create a recommendation playlist on Spotify (must create playlist first)</a>
 
   {% endif %}
     {% with posts=playlist.songs %}

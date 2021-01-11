@@ -25,7 +25,11 @@
             <div class="card-body">
               <h5 class="card-title">{{playlist.name}}</h5>
               <p class="card-text">{{playlist.description}}</p>
+              {% if playlist.spotify_id %}
               <a href="/playlists/{{playlist.id}}/recommend" class="btn btn-success btn-lg rounded-pill">Get recommendations</a>
+              {% else %}
+              <a href="/playlists/{{playlist.id}}/spotify" class="btn btn-success btn-lg rounded-pill">Create this playlist on spotify first</a>
+              {% endif %}
             </div>
           </div>
           <hr class="red-hr">
